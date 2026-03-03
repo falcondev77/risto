@@ -1,120 +1,126 @@
 <?php require __DIR__.'/config.php'; require __DIR__.'/functions.php'; ?>
-<!doctype html>
-<html lang="it">
+<!DOCTYPE html>
+<html class="dark" lang="it">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Ristorante</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <meta charset="utf-8"/>
+  <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+  <title>La Mozzata</title>
+  <link href="https://fonts.googleapis.com" rel="preconnect"/>
+  <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@300;400;500;700&family=Playfair+Display:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet"/>
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+  <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+  <script>
+    tailwind.config = {
+      darkMode: "class",
+      theme: {
+        extend: {
+          colors: {
+            "primary": "#ec4913",
+            "background-light": "#f8f6f6",
+            "background-dark": "#221510",
+            "surface-dark": "#2e1e19",
+          },
+          fontFamily: {
+            "display": ["Manrope", "sans-serif"],
+            "serif": ["Playfair Display", "serif"],
+          },
+          borderRadius: {
+            "DEFAULT": "0.25rem",
+            "lg": "0.5rem",
+            "xl": "0.75rem",
+            "full": "9999px"
+          },
+          backgroundImage: {
+            'hero-pattern': "linear-gradient(to bottom, rgba(34, 21, 16, 0.4), rgba(34, 21, 16, 0.9))",
+          }
+        },
+      },
+    }
+  </script>
   <style>
-    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-    :root {
-      --bg: #f8f8f7;
-      --surface: #ffffff;
-      --border: #e4e4e4;
-      --text: #1a1a1a;
-      --text-muted: #6b6b6b;
-      --radius: 14px;
-      --radius-sm: 9px;
+    body { font-family: 'Manrope', "Noto Sans", sans-serif; }
+    @keyframes fadeInUp {
+      from { opacity: 0; transform: translateY(24px); }
+      to   { opacity: 1; transform: translateY(0); }
     }
-    body {
-      font-family: 'Inter', system-ui, sans-serif;
-      background: var(--bg);
-      color: var(--text);
-      min-height: 100vh;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      padding: 24px 16px;
-    }
-    .hero { text-align: center; max-width: 400px; }
-    .hero-label {
-      display: inline-block;
-      font-size: 11px;
-      font-weight: 600;
-      letter-spacing: 1.5px;
-      text-transform: uppercase;
-      color: var(--text-muted);
-      margin-bottom: 16px;
-    }
-    .hero-title {
-      font-size: clamp(28px, 6vw, 40px);
-      font-weight: 600;
-      letter-spacing: -.8px;
-      line-height: 1.15;
-      margin-bottom: 10px;
-    }
-    .hero-sub {
-      font-size: 15px;
-      color: var(--text-muted);
-      line-height: 1.6;
-      margin-bottom: 36px;
-    }
-    .cta-group {
-      display: flex;
-      gap: 10px;
-      justify-content: center;
-      flex-wrap: wrap;
-    }
-    .btn {
-      display: inline-flex;
-      align-items: center;
-      gap: 7px;
-      padding: 12px 22px;
-      border-radius: var(--radius-sm);
-      font-family: inherit;
-      font-size: 14px;
-      font-weight: 500;
-      text-decoration: none;
-      border: 1px solid;
-      transition: all .15s;
-      cursor: pointer;
-    }
-    .btn:active { transform: scale(.98); }
-    .btn-primary { background: var(--text); color: #fff; border-color: var(--text); }
-    .btn-primary:hover { background: #333; border-color: #333; }
-    .btn-secondary { background: var(--surface); color: var(--text); border-color: var(--border); }
-    .btn-secondary:hover { background: var(--bg); border-color: var(--text); }
-
-    .divider {
-      width: 40px; height: 1px;
-      background: var(--border);
-      margin: 40px auto;
-    }
-
-    .footer {
-      text-align: center;
-      font-size: 12px;
-      color: var(--text-muted);
-    }
-    .footer a { color: var(--text-muted); text-decoration: none; }
-    .footer a:hover { color: var(--text); }
+    .animate-fade-in-up { animation: fadeInUp .7s ease both; }
   </style>
 </head>
-<body>
-  <div class="hero">
-    <span class="hero-label">Benvenuto</span>
-    <h1 class="hero-title">Ristorante</h1>
-    <p class="hero-sub">Prenota un tavolo o sfoglia il nostro menu.</p>
-    <div class="cta-group">
-      <a class="btn btn-primary" href="/prenota.php">
-        <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>
-        Prenota un tavolo
-      </a>
-      <a class="btn btn-secondary" href="/menu.php">
-        <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
-        Vedi il menu
-      </a>
+<body class="bg-background-light dark:bg-background-dark text-slate-900 dark:text-slate-100 min-h-screen flex flex-col transition-colors duration-300">
+
+  <div class="relative flex flex-grow w-full flex-col overflow-hidden">
+
+    <!-- Hero Background -->
+    <div class="absolute inset-0 z-0">
+      <div class="absolute inset-0 bg-hero-pattern z-10"></div>
+      <div class="w-full h-full bg-cover bg-center opacity-40 mix-blend-overlay"
+           style="background-image: url('https://images.pexels.com/photos/1640777/pexels-photo-1640777.jpeg?auto=compress&cs=tinysrgb&w=1600');"></div>
     </div>
-  </div>
 
-  <div class="divider"></div>
+    <div class="layout-container flex h-full grow flex-col relative z-20 justify-center items-center">
 
-  <div class="footer">
-    <a href="/admin/login.php">Area riservata</a>
+      <!-- Top Bar -->
+      <div class="absolute top-0 w-full px-8 py-6 flex justify-between items-center opacity-80">
+        <div class="flex gap-2">
+          <span class="material-symbols-outlined text-white/70 hover:text-primary transition-colors cursor-pointer">menu</span>
+        </div>
+        <div class="flex gap-4">
+          <a href="/admin/login.php" class="material-symbols-outlined text-white/70 hover:text-primary transition-colors cursor-pointer no-underline" style="text-decoration:none;font-family:'Material Symbols Outlined';">admin_panel_settings</a>
+        </div>
+      </div>
+
+      <!-- Central Content -->
+      <div class="px-4 md:px-40 flex flex-1 justify-center items-center py-5 w-full">
+        <div class="flex flex-col max-w-[960px] flex-1 items-center animate-fade-in-up">
+
+          <!-- Icon -->
+          <div class="mb-6 text-primary opacity-90">
+            <span class="material-symbols-outlined text-5xl">restaurant</span>
+          </div>
+
+          <!-- Title -->
+          <h1 class="text-white font-serif text-[48px] md:text-[64px] font-bold leading-tight px-4 text-center pb-2 tracking-wide drop-shadow-sm">
+            La Mozzata
+          </h1>
+
+          <!-- Subtitle -->
+          <p class="text-slate-300 text-lg md:text-xl text-center font-display font-light mb-12 max-w-md mx-auto leading-relaxed">
+            Sapori autentici italiani attorno all'arte della mozzarella fresca.
+          </p>
+
+          <!-- Buttons -->
+          <div class="flex flex-col sm:flex-row gap-4 w-full justify-center max-w-[480px]">
+            <a href="/prenota.php" class="group flex items-center justify-center overflow-hidden rounded-full h-14 px-8 bg-primary hover:bg-[#ff5a20] text-white text-lg font-bold leading-normal tracking-wide transition-all duration-300 hover:shadow-[0_0_20px_rgba(236,73,19,0.3)] w-full sm:w-auto min-w-[160px] no-underline" style="text-decoration:none;">
+              <span class="mr-2">Prenota</span>
+              <span class="material-symbols-outlined text-sm transition-transform group-hover:translate-x-1">calendar_today</span>
+            </a>
+            <a href="/menu.php" class="group flex items-center justify-center overflow-hidden rounded-full h-14 px-8 bg-white/10 hover:bg-white/20 border border-white/20 hover:border-white/40 text-white text-lg font-bold leading-normal tracking-wide backdrop-blur-sm transition-all duration-300 w-full sm:w-auto min-w-[160px] no-underline" style="text-decoration:none;">
+              <span class="mr-2">Menu</span>
+              <span class="material-symbols-outlined text-sm transition-transform group-hover:translate-x-1">restaurant_menu</span>
+            </a>
+          </div>
+
+          <!-- Location / Hours -->
+          <div class="mt-20 flex gap-8 items-center justify-center text-slate-400 text-sm font-medium tracking-widest uppercase">
+            <a class="hover:text-primary transition-colors flex items-center gap-1 no-underline" href="#" style="text-decoration:none;">
+              <span class="material-symbols-outlined text-[18px]">location_on</span> Roma
+            </a>
+            <span class="w-1 h-1 rounded-full bg-slate-600"></span>
+            <a class="hover:text-primary transition-colors flex items-center gap-1 no-underline" href="#" style="text-decoration:none;">
+              <span class="material-symbols-outlined text-[18px]">schedule</span> 19:00 - 23:00
+            </a>
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+    <!-- Footer -->
+    <div class="relative z-20 w-full py-4 text-center">
+      <p class="text-xs text-white/20 font-display">© 2024 La Mozzata Experience</p>
+    </div>
+
   </div>
 </body>
 </html>
