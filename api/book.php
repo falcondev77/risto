@@ -7,10 +7,17 @@ $last  = trim($_POST['last_name'] ?? '');
 $phone = trim($_POST['phone'] ?? '');
 $email = trim($_POST['email'] ?? '');
 $date  = trim($_POST['booking_date'] ?? '');
+$time  = trim($_POST['booking_time'] ?? '');
 $people = (int)($_POST['people'] ?? 0);
 
-if ($first==='' || $last==='' || $phone==='' || $email==='' || $date==='' || $people<1) {
+$allowed_times = ['19:00','19:30','20:00','20:30','21:00','21:30','22:00','22:30'];
+
+if ($first==='' || $last==='' || $phone==='' || $email==='' || $date==='' || $time==='' || $people<1) {
   json_out(['ok'=>false,'error'=>'Compila tutti i campi.'], 400);
+}
+
+if (!in_array($time, $allowed_times, true)) {
+  json_out(['ok'=>false,'error'=>'Orario non valido.'], 400);
 }
 
 if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
@@ -28,9 +35,9 @@ if ($capacity > 0 && ($used + $people) > $capacity) {
 
 $status = ($mode === 'manual') ? 'pending' : 'confirmed';
 
-$st = $pdo->prepare("INSERT INTO bookings(first_name,last_name,phone,email,booking_date,people,status)
-                     VALUES(?,?,?,?,?,?,?)");
-$st->execute([$first,$last,$phone,$email,$date,$people,$status]);
+$st = $pdo->prepare("INSERT INTO bookings(first_name,last_name,phone,email,booking_date,booking_time,people,status)
+                     VALUES(?,?,?,?,?,?,?,?)");
+$st->execute([$first,$last,$phone,$email,$date,$time,$people,$status]);
 
 push_event($pdo, 'booking_created', ['date'=>$date]);
 

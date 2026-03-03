@@ -264,6 +264,28 @@
     .cal-day.past { color: #D0D0D0; cursor: default; }
     .cal-day.empty { cursor: default; }
 
+    /* TIME SLOTS */
+    .time-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 8px;
+    }
+    .time-chip {
+      padding: 10px 4px;
+      text-align: center;
+      border-radius: 10px;
+      border: 1.5px solid var(--border);
+      background: var(--white);
+      font-family: inherit;
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--dark);
+      cursor: pointer;
+      transition: all .15s;
+    }
+    .time-chip:hover { border-color: var(--coral); color: var(--coral); background: #FFF0F0; }
+    .time-chip.selected { background: var(--coral); color: var(--white); border-color: var(--coral); font-weight: 700; }
+
     /* DETAILS FORM */
     .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
     .form-group { display: flex; flex-direction: column; gap: 5px; }
@@ -505,6 +527,22 @@
         <input type="hidden" id="bookingDate" />
       </div>
 
+      <!-- TIME SLOTS -->
+      <div class="section">
+        <div class="section-label">Scegli un orario</div>
+        <div class="time-grid" id="timeGrid">
+          <button class="time-chip" data-time="19:00">19:00</button>
+          <button class="time-chip" data-time="19:30">19:30</button>
+          <button class="time-chip" data-time="20:00">20:00</button>
+          <button class="time-chip" data-time="20:30">20:30</button>
+          <button class="time-chip" data-time="21:00">21:00</button>
+          <button class="time-chip" data-time="21:30">21:30</button>
+          <button class="time-chip" data-time="22:00">22:00</button>
+          <button class="time-chip" data-time="22:30">22:30</button>
+        </div>
+        <input type="hidden" id="bookingTime" />
+      </div>
+
       <!-- DETAILS -->
       <div class="section" style="padding-bottom:24px">
         <div class="section-label">I tuoi dati</div>
@@ -662,6 +700,17 @@ function setLoading(btn, on) {
   btn.classList.toggle('loading', on);
 }
 
+// TIME SLOTS
+let selectedTime = null;
+document.getElementById('timeGrid').addEventListener('click', e => {
+  const chip = e.target.closest('.time-chip');
+  if (!chip) return;
+  document.querySelectorAll('.time-chip').forEach(c => c.classList.remove('selected'));
+  chip.classList.add('selected');
+  selectedTime = chip.dataset.time;
+  document.getElementById('bookingTime').value = selectedTime;
+});
+
 // BOOK
 document.getElementById('bookBtn').addEventListener('click', async () => {
   const fn = document.getElementById('first_name').value.trim();
@@ -669,11 +718,12 @@ document.getElementById('bookBtn').addEventListener('click', async () => {
   const ph = document.getElementById('phone').value.trim();
   const em = document.getElementById('email').value.trim();
   const date = document.getElementById('bookingDate').value;
+  const time = document.getElementById('bookingTime').value;
   const ppl = document.getElementById('people').value;
   const msg = document.getElementById('bookMsg');
 
-  if (!fn || !ln || !ph || !em || !date) {
-    showMsg(msg, 'Compila tutti i campi e seleziona una data.', 'error');
+  if (!fn || !ln || !ph || !em || !date || !time) {
+    showMsg(msg, 'Compila tutti i campi, seleziona una data e un orario.', 'error');
     msg.scrollIntoView({ behavior: 'smooth', block: 'center' });
     return;
   }
@@ -689,6 +739,7 @@ document.getElementById('bookBtn').addEventListener('click', async () => {
     fd.append('phone', ph);
     fd.append('email', em);
     fd.append('booking_date', date);
+    fd.append('booking_time', time);
     fd.append('people', ppl);
     const r = await fetch('/api/book.php', { method: 'POST', body: fd });
     const j = await r.json();
@@ -699,7 +750,10 @@ document.getElementById('bookBtn').addEventListener('click', async () => {
       document.getElementById('phone').value = '';
       document.getElementById('email').value = '';
       selectedDate = null;
+      selectedTime = null;
       document.getElementById('bookingDate').value = '';
+      document.getElementById('bookingTime').value = '';
+      document.querySelectorAll('.time-chip').forEach(c => c.classList.remove('selected'));
       renderCal();
     } else {
       showMsg(msg, j.error || 'Errore durante la prenotazione.', 'error');
@@ -744,10 +798,11 @@ document.getElementById('verifyBtn').addEventListener('click', async () => {
     out.innerHTML = j.bookings.map(b => {
       const [cls, lbl] = badgeMap[b.status] || ['badge-cancelled', b.status];
       const canCancel = b.status !== 'cancelled' && b.status !== 'rejected';
+      const timeLabel = b.booking_time ? ` · ${b.booking_time}` : '';
       return `<div class="booking-card">
         <div class="booking-card-row">
           <div class="booking-card-left">
-            <div class="booking-card-date">${b.booking_date}</div>
+            <div class="booking-card-date">${b.booking_date}${timeLabel}</div>
             <div class="booking-card-people">${b.people} ${b.people === 1 ? 'persona' : 'persone'}</div>
           </div>
           <span class="badge ${cls}">${lbl}</span>

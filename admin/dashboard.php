@@ -511,11 +511,12 @@ async function loadBookings() {
 
     container.innerHTML = `<table>
       <thead><tr>
-        <th>Data</th><th>Nome</th><th>Email</th><th>Telefono</th><th>Persone</th><th>Stato</th><th>Azioni</th>
+        <th>Data</th><th>Orario</th><th>Nome</th><th>Email</th><th>Telefono</th><th>Persone</th><th>Stato</th><th>Azioni</th>
       </tr></thead>
       <tbody>
         ${j.rows.map(x => `<tr>
           <td>${x.booking_date}</td>
+          <td>${x.booking_time ? x.booking_time.substring(0,5) : '—'}</td>
           <td>${x.first_name} ${x.last_name}</td>
           <td><span style="color:var(--text-muted)">${x.email}</span></td>
           <td>${x.phone}</td>

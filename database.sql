@@ -28,6 +28,7 @@ CREATE TABLE bookings (
   phone VARCHAR(30) NOT NULL,
   email VARCHAR(120) NOT NULL,
   booking_date DATE NOT NULL,
+  booking_time TIME NOT NULL DEFAULT '19:00:00',
   people INT NOT NULL,
   status ENUM('pending','confirmed','rejected','cancelled') NOT NULL DEFAULT 'pending',
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
@@ -36,6 +37,9 @@ CREATE TABLE bookings (
   INDEX (booking_date),
   INDEX (status)
 ) ENGINE=InnoDB;
+
+-- Migration: add booking_time if table already exists
+-- ALTER TABLE bookings ADD COLUMN booking_time TIME NOT NULL DEFAULT '19:00:00' AFTER booking_date;
 
 CREATE TABLE events (
   id BIGINT AUTO_INCREMENT PRIMARY KEY,

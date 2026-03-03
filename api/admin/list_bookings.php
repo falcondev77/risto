@@ -6,10 +6,10 @@ require_admin();
 $mode = setting($pdo,'mode') ?? 'auto';
 $today = date('Y-m-d');
 
-$st = $pdo->query("SELECT id, first_name, last_name, phone, email, booking_date, people, status
+$st = $pdo->query("SELECT id, first_name, last_name, phone, email, booking_date, booking_time, people, status
                    FROM bookings
                    WHERE status IN ('pending','confirmed','rejected')
-                   ORDER BY booking_date ASC, created_at DESC
+                   ORDER BY booking_date ASC, booking_time ASC, created_at DESC
                    LIMIT 300");
 $rows = $st->fetchAll();
 

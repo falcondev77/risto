@@ -9,7 +9,7 @@ if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
 
 $mode = setting($pdo,'mode') ?? 'auto';
 
-$st = $pdo->prepare("SELECT id, booking_date, people, status, created_at
+$st = $pdo->prepare("SELECT id, booking_date, booking_time, people, status, created_at
                      FROM bookings
                      WHERE email=?
                      ORDER BY created_at DESC
@@ -23,6 +23,7 @@ $mapped = array_map(function($b) use ($mode){
   return [
     'id' => (int)$b['id'],
     'booking_date' => $b['booking_date'],
+    'booking_time' => $b['booking_time'] ? substr($b['booking_time'], 0, 5) : '',
     'people' => (int)$b['people'],
     'status' => $b['status'],
     'status_label' => $label
