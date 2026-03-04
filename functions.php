@@ -81,7 +81,16 @@ function seats_used_for_slot(PDO $pdo, string $dateYmd, string $slotTime): int {
 function is_closure_day(PDO $pdo, string $dateYmd): bool {
   $st = $pdo->prepare("SELECT 1 FROM closure_days WHERE date=?");
   $st->execute([$dateYmd]);
-  return (bool)$st->fetch();
+  if ($st->fetch()) return true;
+
+  $dow = (int)date('w', strtotime($dateYmd));
+  try {
+    $st2 = $pdo->prepare("SELECT 1 FROM weekly_closures WHERE day_of_week=?");
+    $st2->execute([$dow]);
+    return (bool)$st2->fetch();
+  } catch (Throwable $e) {
+    return false;
+  }
 }
 
 function get_closure_days_range(PDO $pdo, string $from, string $to): array {

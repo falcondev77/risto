@@ -127,6 +127,11 @@ body { font-family: 'Manrope', sans-serif; }
 .sr { display:flex; align-items:center; gap:10px; padding:10px 0; border-bottom:1px solid rgba(255,255,255,.05); }
 .sr:last-child { border-bottom:none; }
 
+/* WEEK DAY TOGGLE */
+.wday { display:inline-flex; align-items:center; justify-content:center; width:44px; height:44px; border-radius:10px; font-size:12.5px; font-weight:700; cursor:pointer; border:1px solid rgba(255,255,255,.1); background:rgba(255,255,255,.04); color:#64748b; transition:all .15s; user-select:none; }
+.wday:hover { background:rgba(255,255,255,.08); color:#94a3b8; }
+.wday.selected { background:rgba(251,146,60,.18); color:#fb923c; border-color:rgba(251,146,60,.4); }
+
 /* TAB */
 .tab-panel { display:none; }
 .tab-panel.active { display:block; }
@@ -319,6 +324,17 @@ body { font-family: 'Manrope', sans-serif; }
           </div>
         </div>
 
+        <!-- Weekly Closure Days -->
+        <div class="card md:col-span-2">
+          <div class="ch"><span class="cht"><span class="ms text-[18px]" style="color:#fb923c">event_repeat</span> Chiusure settimanali fisse</span></div>
+          <div class="cb">
+            <p class="text-sm text-slate-400 mb-4 leading-relaxed">Seleziona i giorni della settimana in cui il locale è sempre chiuso. Questi giorni non saranno prenotabili.</p>
+            <div class="flex flex-wrap gap-2 mb-4" id="weekDayBtns"></div>
+            <button class="btn-p" id="saveWeeklyClosures"><span class="spinner"></span><span class="btn-label"><span class="ms text-[15px]">save</span> Salva giorni fissi</span></button>
+            <div id="weeklyClosureMsg" class="msg mt-3"></div>
+          </div>
+        </div>
+
         <!-- Closure Days — full width -->
         <div class="card md:col-span-2">
           <div class="ch">
@@ -372,7 +388,7 @@ function switchTab(tab, btn) {
   btn.classList.add('active');
   document.getElementById('topbarTitle').textContent = TITLES[tab] || tab;
   closeSidebar();
-  if (tab === 'settings') { loadSlots(); loadClosureDays(); }
+  if (tab === 'settings') { loadSlots(); loadClosureDays(); loadWeeklyClosures(); }
   if (tab === 'bookings') { clearBadge('bookings'); }
   if (tab === 'cancellations') { clearBadge('cancellations'); }
 }
@@ -418,14 +434,21 @@ function formatDateLabel(d) {
 }
 
 // DATE FILTER HELPERS
-function buildDateOptions(rows, selectId, field) {
+function todayStr() {
+  return new Date().toISOString().slice(0,10);
+}
+
+function buildDateOptions(rows, selectId, field, autoToday=false) {
   const sel = document.getElementById(selectId);
   const prev = sel.value;
   const dates = [...new Set(rows.map(r => r[field]))].sort();
+  const today = todayStr();
+  let chosen = prev;
+  if (!prev && autoToday && dates.includes(today)) chosen = today;
   const opts = ['<option value="">Tutte le date</option>'];
   dates.forEach(d => {
-    const sel2 = prev === d ? ' selected' : '';
-    opts.push(`<option value="${d}"${sel2}>${formatDateLabel(d)}</option>`);
+    const isSel = chosen === d ? ' selected' : '';
+    opts.push(`<option value="${d}"${isSel}>${formatDateLabel(d)}</option>`);
   });
   sel.innerHTML = opts.join('');
 }
@@ -462,7 +485,7 @@ async function loadBookings() {
     prevBookingCount = newCount;
 
     allBookingRows = j.rows;
-    buildDateOptions(j.rows, 'bookingDateFilter', 'booking_date');
+    buildDateOptions(j.rows, 'bookingDateFilter', 'booking_date', true);
     applyBookingFilter();
   } catch(e) { console.error(e); }
 }
@@ -721,7 +744,8 @@ function renderClosureCal() {
   for(let d=1;d<=days;d++) {
     const ds = cYear+'-'+String(cMonth+1).padStart(2,'0')+'-'+String(d).padStart(2,'0');
     const td = new Date(cYear,cMonth,d);
-    const closed = cDays.includes(ds);
+    const dow = td.getDay();
+    const closed = cDays.includes(ds) || selectedWeekDays.has(dow);
     const past = td < today && !closed;
     const isToday = td.getTime()===today.getTime();
     let cls = 'mcd';
@@ -768,6 +792,51 @@ function renderClosureList(rows) {
 
 document.getElementById('closurePrev').addEventListener('click', () => { cMonth--; if(cMonth<0){cMonth=11;cYear--;} loadClosureDays(); });
 document.getElementById('closureNext').addEventListener('click', () => { cMonth++; if(cMonth>11){cMonth=0;cYear++;} loadClosureDays(); });
+
+// ===== WEEKLY CLOSURES =====
+const WEEK_LABELS = ['Dom','Lun','Mar','Mer','Gio','Ven','Sab'];
+let selectedWeekDays = new Set();
+
+function renderWeekDayBtns() {
+  const ct = document.getElementById('weekDayBtns');
+  ct.innerHTML = WEEK_LABELS.map((lbl, i) => `
+    <button type="button" class="wday${selectedWeekDays.has(i) ? ' selected' : ''}" data-dow="${i}">${lbl}</button>
+  `).join('');
+  ct.querySelectorAll('.wday').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const d = parseInt(btn.dataset.dow);
+      if (selectedWeekDays.has(d)) selectedWeekDays.delete(d);
+      else selectedWeekDays.add(d);
+      btn.classList.toggle('selected', selectedWeekDays.has(d));
+    });
+  });
+}
+
+async function loadWeeklyClosures() {
+  try {
+    const j = await fetch('/api/admin/get_weekly_closures.php').then(r => r.json());
+    if (j.ok) {
+      selectedWeekDays = new Set(j.days.map(Number));
+      renderWeekDayBtns();
+    }
+  } catch(e) { console.error(e); }
+}
+
+document.getElementById('saveWeeklyClosures').addEventListener('click', async () => {
+  const btn = document.getElementById('saveWeeklyClosures');
+  setLoading(btn, true);
+  try {
+    const fd = new FormData();
+    fd.append('days', [...selectedWeekDays].join(','));
+    const j = await fetch('/api/admin/save_weekly_closures.php', { method:'POST', body:fd }).then(r => r.json());
+    const msg = document.getElementById('weeklyClosureMsg');
+    if (j.ok) {
+      showMsg(msg, 'Giorni di chiusura settimanali salvati.', 'success');
+      loadClosureDays();
+    } else showMsg(msg, j.error||'Errore', 'error');
+  } catch { showMsg(document.getElementById('weeklyClosureMsg'),'Errore di rete.','error'); }
+  setLoading(btn, false);
+});
 
 // INIT
 loadBookings();
