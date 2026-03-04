@@ -63,9 +63,9 @@ body { font-family: 'Manrope', sans-serif; }
 .abt-x:hover:not(:disabled) { background:rgba(239,68,68,.2); }
 
 /* INPUTS */
-.fi { background:rgba(255,255,255,.06); border:1px solid rgba(255,255,255,.1); border-radius:8px; padding:8px 12px; font-family:inherit; font-size:13.5px; color:#e2e8f0; outline:none; transition:border-color .15s, box-shadow .15s; }
-.fi:focus { border-color:#ec4913; box-shadow:0 0 0 3px rgba(236,73,19,.15); }
-.fi::placeholder { color:#334155; }
+.fi { background:#f5f0ee; border:1px solid rgba(0,0,0,.12); border-radius:8px; padding:8px 12px; font-family:inherit; font-size:13.5px; color:#1a0f0a; outline:none; transition:border-color .15s, box-shadow .15s; }
+.fi:focus { border-color:#ec4913; box-shadow:0 0 0 3px rgba(236,73,19,.2); }
+.fi::placeholder { color:#9a7060; }
 
 /* CARD */
 .card { background:#2e1e19; border:1px solid rgba(255,255,255,.06); border-radius:14px; overflow:hidden; margin-bottom:16px; }
