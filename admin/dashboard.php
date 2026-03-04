@@ -51,6 +51,8 @@ body { font-family: 'Manrope', sans-serif; }
 .btn-g { background:rgba(255,255,255,.06); color:#94a3b8; border:1px solid rgba(255,255,255,.1); border-radius:8px; padding:7px 13px; font-family:inherit; font-size:13px; font-weight:500; cursor:pointer; transition:all .12s; display:inline-flex; align-items:center; gap:6px; }
 .btn-g:hover:not(:disabled) { background:rgba(255,255,255,.1); color:#e2e8f0; }
 .btn-g:disabled { opacity:.4; cursor:not-allowed; }
+.btn-danger { background:rgba(239,68,68,.12); color:#f87171; border:1px solid rgba(239,68,68,.25); border-radius:8px; padding:7px 13px; font-family:inherit; font-size:13px; font-weight:600; cursor:pointer; transition:all .12s; display:inline-flex; align-items:center; gap:6px; }
+.btn-danger:hover:not(:disabled) { background:rgba(239,68,68,.22); color:#fca5a5; }
 .abt { display:inline-flex; align-items:center; gap:4px; padding:4px 10px; border-radius:6px; font-family:inherit; font-size:11.5px; font-weight:600; cursor:pointer; border:1px solid; transition:all .12s; white-space:nowrap; }
 .abt:disabled { opacity:.4; cursor:not-allowed; }
 .abt-ok { background:rgba(34,197,94,.1); color:#4ade80; border-color:rgba(34,197,94,.25); }
@@ -66,6 +68,18 @@ body { font-family: 'Manrope', sans-serif; }
 .fi { background:#f5f0ee; border:1px solid rgba(0,0,0,.12); border-radius:8px; padding:8px 12px; font-family:inherit; font-size:13.5px; color:#1a0f0a; outline:none; transition:border-color .15s, box-shadow .15s; }
 .fi:focus { border-color:#ec4913; box-shadow:0 0 0 3px rgba(236,73,19,.2); }
 .fi::placeholder { color:#9a7060; }
+
+/* DATE FILTER SELECT */
+.date-filter { background:rgba(255,255,255,.06); border:1px solid rgba(255,255,255,.1); border-radius:8px; padding:6px 32px 6px 10px; font-family:inherit; font-size:12.5px; color:#e2e8f0; outline:none; cursor:pointer; appearance:none; -webkit-appearance:none; background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%2394a3b8' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E"); background-repeat:no-repeat; background-position:right 10px center; min-width:160px; transition:border-color .12s; }
+.date-filter:focus { border-color:#ec4913; }
+.date-filter option { background:#2e1e19; color:#e2e8f0; }
+
+/* NOTIFICATION BADGE */
+.notif-wrap { position:relative; }
+.notif-dot { position:absolute; top:-3px; right:-4px; min-width:16px; height:16px; border-radius:99px; font-size:9.5px; font-weight:800; display:flex; align-items:center; justify-content:center; padding:0 3px; border:1.5px solid #221510; line-height:1; }
+.notif-dot.new-bookings { background:#ec4913; color:#fff; }
+.notif-dot.new-cancels { background:#f87171; color:#fff; }
+.notif-dot.hidden { display:none; }
 
 /* CARD */
 .card { background:#2e1e19; border:1px solid rgba(255,255,255,.06); border-radius:14px; overflow:hidden; margin-bottom:16px; }
@@ -147,10 +161,18 @@ body { font-family: 'Manrope', sans-serif; }
   </div>
   <nav class="flex-1 p-3 space-y-0.5">
     <button class="nv active" data-tab="bookings" onclick="switchTab('bookings',this)">
-      <span class="ms text-[18px]">calendar_month</span> Prenotazioni
+      <span class="notif-wrap flex items-center gap-2 w-full">
+        <span class="ms text-[18px]">calendar_month</span>
+        Prenotazioni
+        <span class="notif-dot new-bookings hidden" id="navBadgeBookings">0</span>
+      </span>
     </button>
     <button class="nv" data-tab="cancellations" onclick="switchTab('cancellations',this)">
-      <span class="ms text-[18px]">cancel</span> Cancellazioni
+      <span class="notif-wrap flex items-center gap-2 w-full">
+        <span class="ms text-[18px]">cancel</span>
+        Cancellazioni
+        <span class="notif-dot new-cancels hidden" id="navBadgeCancels">0</span>
+      </span>
     </button>
     <button class="nv" data-tab="settings" onclick="switchTab('settings',this)">
       <span class="ms text-[18px]">settings</span> Impostazioni
@@ -198,7 +220,12 @@ body { font-family: 'Manrope', sans-serif; }
       <div class="card">
         <div class="ch">
           <span class="cht"><span class="ms text-[18px] text-primary">calendar_month</span> Prenotazioni attive</span>
-          <button class="btn-g text-xs" onclick="loadBookings()"><span class="ms text-[15px]">refresh</span> Aggiorna</button>
+          <div class="flex items-center gap-2 flex-wrap">
+            <select id="bookingDateFilter" class="date-filter" onchange="applyBookingFilter()">
+              <option value="">Tutte le date</option>
+            </select>
+            <button class="btn-g text-xs" onclick="loadBookings()"><span class="ms text-[15px]">refresh</span> Aggiorna</button>
+          </div>
         </div>
         <div class="tscroll"><div id="bookingsTable"><div class="empty-st">Caricamento...</div></div></div>
       </div>
@@ -209,7 +236,15 @@ body { font-family: 'Manrope', sans-serif; }
       <div class="card">
         <div class="ch">
           <span class="cht"><span class="ms text-[18px]" style="color:#f87171">cancel</span> Cancellazioni</span>
-          <button class="btn-g text-xs" onclick="loadCancellations()"><span class="ms text-[15px]">refresh</span> Aggiorna</button>
+          <div class="flex items-center gap-2 flex-wrap">
+            <select id="cancelDateFilter" class="date-filter" onchange="applyCancelFilter()">
+              <option value="">Tutte le date</option>
+            </select>
+            <button class="btn-g text-xs" onclick="loadCancellations()"><span class="ms text-[15px]">refresh</span> Aggiorna</button>
+            <button class="btn-danger text-xs" id="clearAllCancelsBtn" onclick="clearAllCancellations()">
+              <span class="ms text-[15px]">delete_sweep</span> Cancella Tutto
+            </button>
+          </div>
         </div>
         <div class="tscroll"><div id="cancellationsTable"><div class="empty-st">Caricamento...</div></div></div>
       </div>
@@ -320,8 +355,17 @@ const TITLES = { bookings:'Prenotazioni', cancellations:'Cancellazioni', setting
 let currentMode = '<?= h($mode) ?>';
 let pollTimer = null;
 
+let allBookingRows = [];
+let allCancelRows = [];
+let prevBookingCount = null;
+let prevCancelCount = null;
+let newBookingsCount = 0;
+let newCancelsCount = 0;
+let activeTab = 'bookings';
+
 // TAB
 function switchTab(tab, btn) {
+  activeTab = tab;
   document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
   document.querySelectorAll('[data-tab]').forEach(n => n.classList.remove('active'));
   document.getElementById('tab_' + tab).classList.add('active');
@@ -329,6 +373,18 @@ function switchTab(tab, btn) {
   document.getElementById('topbarTitle').textContent = TITLES[tab] || tab;
   closeSidebar();
   if (tab === 'settings') { loadSlots(); loadClosureDays(); }
+  if (tab === 'bookings') { clearBadge('bookings'); }
+  if (tab === 'cancellations') { clearBadge('cancellations'); }
+}
+
+function clearBadge(type) {
+  if (type === 'bookings') {
+    newBookingsCount = 0;
+    document.getElementById('navBadgeBookings').classList.add('hidden');
+  } else {
+    newCancelsCount = 0;
+    document.getElementById('navBadgeCancels').classList.add('hidden');
+  }
 }
 
 // SIDEBAR MOBILE
@@ -354,6 +410,31 @@ function showMsg(el, text, type, ms=4000) {
 }
 function setLoading(btn, on) { btn.disabled = on; btn.classList.toggle('loading', on); }
 
+function formatDateLabel(d) {
+  if (!d) return '';
+  const [y,m,day] = d.split('-');
+  const months = ['gen','feb','mar','apr','mag','giu','lug','ago','set','ott','nov','dic'];
+  return `${parseInt(day)} ${months[parseInt(m)-1]} ${y}`;
+}
+
+// DATE FILTER HELPERS
+function buildDateOptions(rows, selectId, field) {
+  const sel = document.getElementById(selectId);
+  const prev = sel.value;
+  const dates = [...new Set(rows.map(r => r[field]))].sort();
+  const opts = ['<option value="">Tutte le date</option>'];
+  dates.forEach(d => {
+    const sel2 = prev === d ? ' selected' : '';
+    opts.push(`<option value="${d}"${sel2}>${formatDateLabel(d)}</option>`);
+  });
+  sel.innerHTML = opts.join('');
+}
+
+function filterRows(rows, date, field) {
+  if (!date) return rows;
+  return rows.filter(r => r[field] === date);
+}
+
 // BOOKINGS
 async function loadBookings() {
   try {
@@ -371,38 +452,59 @@ async function loadBookings() {
     mb.className = 'px-3 py-1 rounded-full text-[10.5px] font-bold uppercase tracking-wider ' +
       (j.mode==='auto' ? 'bg-green-500/10 text-green-400 border border-green-500/25' : 'bg-amber-500/10 text-amber-400 border border-amber-500/25');
 
-    const ct = document.getElementById('bookingsTable');
-    if (!j.rows.length) { ct.innerHTML = '<div class="empty-st">Nessuna prenotazione attiva.</div>'; return; }
+    const newCount = j.rows.length;
+    if (prevBookingCount !== null && newCount > prevBookingCount && activeTab !== 'bookings') {
+      newBookingsCount += (newCount - prevBookingCount);
+      const badge = document.getElementById('navBadgeBookings');
+      badge.textContent = newBookingsCount > 9 ? '9+' : newBookingsCount;
+      badge.classList.remove('hidden');
+    }
+    prevBookingCount = newCount;
 
-    ct.innerHTML = `<table class="dtable">
-      <thead><tr><th>Data</th><th>Orario</th><th>Nome</th><th>Email</th><th>Tel.</th><th>Pers.</th><th>Stato</th><th>Azioni</th></tr></thead>
-      <tbody>${j.rows.map(x=>`<tr>
-        <td class="font-semibold">${x.booking_date}</td>
-        <td><span class="text-primary font-bold">${x.booking_time ? x.booking_time.substring(0,5) : '—'}</span></td>
-        <td>${x.first_name} ${x.last_name}</td>
-        <td class="text-slate-400 text-xs">${x.email}</td>
-        <td class="text-slate-400">${x.phone}</td>
-        <td class="font-bold">${x.people}</td>
-        <td>${badge(x.status)}</td>
-        <td><div class="flex gap-1 flex-wrap">
-          ${j.mode==='manual' && x.status==='pending' ? `
-            <button class="abt abt-ok" data-act="confirm" data-id="${x.id}">Conferma</button>
-            <button class="abt abt-warn" data-act="reject" data-id="${x.id}">Rifiuta</button>` : ''}
-          ${(x.status==='confirmed'||x.status==='pending') ? `
-            <button class="abt abt-x" data-act="cancel" data-id="${x.id}">Cancella</button>` : ''}
-        </div></td>
-      </tr>`).join('')}</tbody></table>`;
-
-    ct.querySelectorAll('[data-act]').forEach(btn => {
-      btn.addEventListener('click', async () => {
-        btn.disabled = true;
-        const fd = new FormData(); fd.append('action', btn.dataset.act); fd.append('id', btn.dataset.id);
-        const j2 = await fetch('/api/admin/decision.php', { method:'POST', body:fd }).then(r=>r.json());
-        if (!j2.ok) { alert(j2.error||'Errore'); btn.disabled=false; }
-        else { loadBookings(); loadCancellations(); }
-      });
-    });
+    allBookingRows = j.rows;
+    buildDateOptions(j.rows, 'bookingDateFilter', 'booking_date');
+    applyBookingFilter();
   } catch(e) { console.error(e); }
+}
+
+function applyBookingFilter() {
+  const date = document.getElementById('bookingDateFilter').value;
+  const rows = filterRows(allBookingRows, date, 'booking_date');
+  renderBookingsTable(rows);
+}
+
+function renderBookingsTable(rows) {
+  const ct = document.getElementById('bookingsTable');
+  if (!rows.length) { ct.innerHTML = '<div class="empty-st">Nessuna prenotazione per questa data.</div>'; return; }
+
+  ct.innerHTML = `<table class="dtable">
+    <thead><tr><th>Data</th><th>Orario</th><th>Nome</th><th>Email</th><th>Tel.</th><th>Pers.</th><th>Stato</th><th>Azioni</th></tr></thead>
+    <tbody>${rows.map(x=>`<tr>
+      <td class="font-semibold">${x.booking_date}</td>
+      <td><span class="text-primary font-bold">${x.booking_time ? x.booking_time.substring(0,5) : '—'}</span></td>
+      <td>${x.first_name} ${x.last_name}</td>
+      <td class="text-slate-400 text-xs">${x.email}</td>
+      <td class="text-slate-400">${x.phone}</td>
+      <td class="font-bold">${x.people}</td>
+      <td>${badge(x.status)}</td>
+      <td><div class="flex gap-1 flex-wrap">
+        ${currentMode==='manual' && x.status==='pending' ? `
+          <button class="abt abt-ok" data-act="confirm" data-id="${x.id}">Conferma</button>
+          <button class="abt abt-warn" data-act="reject" data-id="${x.id}">Rifiuta</button>` : ''}
+        ${(x.status==='confirmed'||x.status==='pending') ? `
+          <button class="abt abt-x" data-act="cancel" data-id="${x.id}">Cancella</button>` : ''}
+      </div></td>
+    </tr>`).join('')}</tbody></table>`;
+
+  ct.querySelectorAll('[data-act]').forEach(btn => {
+    btn.addEventListener('click', async () => {
+      btn.disabled = true;
+      const fd = new FormData(); fd.append('action', btn.dataset.act); fd.append('id', btn.dataset.id);
+      const j2 = await fetch('/api/admin/decision.php', { method:'POST', body:fd }).then(r=>r.json());
+      if (!j2.ok) { alert(j2.error||'Errore'); btn.disabled=false; }
+      else { loadBookings(); loadCancellations(); }
+    });
+  });
 }
 
 // CANCELLATIONS
@@ -410,18 +512,58 @@ async function loadCancellations() {
   try {
     const j = await fetch('/api/admin/list_cancellations.php').then(r=>r.json());
     if (!j.ok) return;
-    const ct = document.getElementById('cancellationsTable');
-    if (!j.rows.length) { ct.innerHTML = '<div class="empty-st">Nessuna cancellazione.</div>'; return; }
-    ct.innerHTML = `<table class="dtable">
-      <thead><tr><th>Data</th><th>Nome</th><th>Email</th><th>Persone</th><th>Cancellata il</th></tr></thead>
-      <tbody>${j.rows.map(x=>`<tr>
-        <td class="font-semibold">${x.booking_date}</td>
-        <td>${x.first_name} ${x.last_name}</td>
-        <td class="text-slate-400 text-xs">${x.email}</td>
-        <td class="font-bold">${x.people}</td>
-        <td class="text-slate-400 text-xs">${x.updated_at}</td>
-      </tr>`).join('')}</tbody></table>`;
+
+    const newCount = j.rows.length;
+    if (prevCancelCount !== null && newCount > prevCancelCount && activeTab !== 'cancellations') {
+      newCancelsCount += (newCount - prevCancelCount);
+      const badge = document.getElementById('navBadgeCancels');
+      badge.textContent = newCancelsCount > 9 ? '9+' : newCancelsCount;
+      badge.classList.remove('hidden');
+    }
+    prevCancelCount = newCount;
+
+    allCancelRows = j.rows;
+    buildDateOptions(j.rows, 'cancelDateFilter', 'booking_date');
+    applyCancelFilter();
   } catch(e) { console.error(e); }
+}
+
+function applyCancelFilter() {
+  const date = document.getElementById('cancelDateFilter').value;
+  const rows = filterRows(allCancelRows, date, 'booking_date');
+  renderCancellationsTable(rows);
+}
+
+function renderCancellationsTable(rows) {
+  const ct = document.getElementById('cancellationsTable');
+  if (!rows.length) { ct.innerHTML = '<div class="empty-st">Nessuna cancellazione.</div>'; return; }
+  ct.innerHTML = `<table class="dtable">
+    <thead><tr><th>Data</th><th>Nome</th><th>Email</th><th>Persone</th><th>Cancellata il</th></tr></thead>
+    <tbody>${rows.map(x=>`<tr>
+      <td class="font-semibold">${x.booking_date}</td>
+      <td>${x.first_name} ${x.last_name}</td>
+      <td class="text-slate-400 text-xs">${x.email}</td>
+      <td class="font-bold">${x.people}</td>
+      <td class="text-slate-400 text-xs">${x.updated_at}</td>
+    </tr>`).join('')}</tbody></table>`;
+}
+
+// CLEAR ALL CANCELLATIONS
+async function clearAllCancellations() {
+  if (!allCancelRows.length) return;
+  if (!confirm('Eliminare definitivamente tutte le cancellazioni? Questa azione non è reversibile.')) return;
+  const btn = document.getElementById('clearAllCancelsBtn');
+  btn.disabled = true;
+  try {
+    const j = await fetch('/api/admin/clear_cancellations.php', { method:'POST' }).then(r=>r.json());
+    if (j.ok) {
+      allCancelRows = [];
+      prevCancelCount = 0;
+      buildDateOptions([], 'cancelDateFilter', 'booking_date');
+      renderCancellationsTable([]);
+    } else { alert(j.error||'Errore'); }
+  } catch { alert('Errore di rete.'); }
+  btn.disabled = false;
 }
 
 // SETTINGS: MODE
