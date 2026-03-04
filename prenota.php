@@ -1,4 +1,11 @@
-<?php require __DIR__.'/config.php'; require __DIR__.'/functions.php'; ?>
+<?php
+require __DIR__.'/config.php';
+require __DIR__.'/functions.php';
+$_from = date('Y-m-01');
+$_to   = date('Y-m-t', strtotime('+3 months'));
+$_closureDays = array_column(get_closure_days_range($pdo, $_from, $_to), 'date');
+$closureJson = json_encode($_closureDays);
+?>
 <!doctype html>
 <html lang="it">
 <head>
@@ -263,6 +270,7 @@
     .cal-day.today:not(.selected) { font-weight: 700; color: var(--coral); }
     .cal-day.past { color: #D0D0D0; cursor: default; }
     .cal-day.empty { cursor: default; }
+    .cal-day.closed { color: var(--coral-light); cursor: default; text-decoration: line-through; opacity: .5; }
 
     /* TIME SLOTS */
     .time-grid {
@@ -531,14 +539,7 @@
       <div class="section">
         <div class="section-label">Scegli un orario</div>
         <div class="time-grid" id="timeGrid">
-          <button class="time-chip" data-time="19:00">19:00</button>
-          <button class="time-chip" data-time="19:30">19:30</button>
-          <button class="time-chip" data-time="20:00">20:00</button>
-          <button class="time-chip" data-time="20:30">20:30</button>
-          <button class="time-chip" data-time="21:00">21:00</button>
-          <button class="time-chip" data-time="21:30">21:30</button>
-          <button class="time-chip" data-time="22:00">22:00</button>
-          <button class="time-chip" data-time="22:30">22:30</button>
+          <div style="grid-column:1/-1;text-align:center;color:var(--dark-mid);font-size:13px;padding:8px 0">Caricamento orari...</div>
         </div>
         <input type="hidden" id="bookingTime" />
       </div>
@@ -630,6 +631,9 @@ document.getElementById('btnMinus').addEventListener('click', () => {
 });
 updateChairs();
 
+// CLOSURE DAYS
+const CLOSURE_DAYS = <?= $closureJson ?>;
+
 // CALENDAR
 const monthNames = ['Gennaio','Febbraio','Marzo','Aprile','Maggio','Giugno','Luglio','Agosto','Settembre','Ottobre','Novembre','Dicembre'];
 let calYear, calMonth, selectedDate = null;
@@ -665,12 +669,17 @@ function renderCal() {
     const thisDate = new Date(calYear, calMonth, d);
     const dateStr = calYear + '-' + String(calMonth+1).padStart(2,'0') + '-' + String(d).padStart(2,'0');
 
-    if (thisDate < today) btn.classList.add('past');
-    else if (thisDate.getTime() === today.getTime()) btn.classList.add('today');
+    if (CLOSURE_DAYS.includes(dateStr)) {
+      btn.classList.add('closed');
+    } else if (thisDate < today) {
+      btn.classList.add('past');
+    } else if (thisDate.getTime() === today.getTime()) {
+      btn.classList.add('today');
+    }
 
     if (selectedDate === dateStr) btn.classList.add('selected');
 
-    if (!btn.classList.contains('past')) {
+    if (!btn.classList.contains('past') && !btn.classList.contains('closed')) {
       btn.addEventListener('click', () => {
         selectedDate = dateStr;
         document.getElementById('bookingDate').value = dateStr;
@@ -688,6 +697,7 @@ document.getElementById('calNext').addEventListener('click', () => {
   calMonth++; if (calMonth > 11) { calMonth = 0; calYear++; } renderCal();
 });
 initCal();
+loadSlots();
 
 // MESSAGES
 function showMsg(el, text, type) {
@@ -702,6 +712,24 @@ function setLoading(btn, on) {
 
 // TIME SLOTS
 let selectedTime = null;
+
+async function loadSlots() {
+  const grid = document.getElementById('timeGrid');
+  try {
+    const r = await fetch('/api/get_slots.php');
+    const j = await r.json();
+    if (!j.ok || !j.slots.length) {
+      grid.innerHTML = '<div style="grid-column:1/-1;text-align:center;color:var(--dark-mid);font-size:13px;padding:8px 0">Nessun orario disponibile.</div>';
+      return;
+    }
+    grid.innerHTML = j.slots.map(s =>
+      `<button class="time-chip" data-time="${s.time}">${s.time}</button>`
+    ).join('');
+  } catch {
+    grid.innerHTML = '<div style="grid-column:1/-1;text-align:center;color:#C62828;font-size:13px;padding:8px 0">Errore caricamento orari.</div>';
+  }
+}
+
 document.getElementById('timeGrid').addEventListener('click', e => {
   const chip = e.target.closest('.time-chip');
   if (!chip) return;

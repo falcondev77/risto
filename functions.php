@@ -57,3 +57,35 @@ function require_admin(): void {
     exit;
   }
 }
+
+function get_active_slots(PDO $pdo): array {
+  $st = $pdo->query("SELECT slot_time, capacity FROM time_slots WHERE is_active=1 ORDER BY sort_order ASC, slot_time ASC");
+  return $st->fetchAll();
+}
+
+function get_all_slots(PDO $pdo): array {
+  $st = $pdo->query("SELECT id, slot_time, capacity, is_active, sort_order FROM time_slots ORDER BY sort_order ASC, slot_time ASC");
+  return $st->fetchAll();
+}
+
+function seats_used_for_slot(PDO $pdo, string $dateYmd, string $slotTime): int {
+  $mode = setting($pdo,'mode') ?? 'auto';
+  $statuses = ($mode === 'manual') ? ['confirmed','pending'] : ['confirmed'];
+  $in = implode(',', array_fill(0, count($statuses), '?'));
+  $params = array_merge([$dateYmd, $slotTime], $statuses);
+  $st = $pdo->prepare("SELECT COALESCE(SUM(people),0) AS s FROM bookings WHERE booking_date=? AND booking_time=? AND status IN ($in)");
+  $st->execute($params);
+  return (int)$st->fetch()['s'];
+}
+
+function is_closure_day(PDO $pdo, string $dateYmd): bool {
+  $st = $pdo->prepare("SELECT 1 FROM closure_days WHERE date=?");
+  $st->execute([$dateYmd]);
+  return (bool)$st->fetch();
+}
+
+function get_closure_days_range(PDO $pdo, string $from, string $to): array {
+  $st = $pdo->prepare("SELECT date, reason FROM closure_days WHERE date BETWEEN ? AND ? ORDER BY date ASC");
+  $st->execute([$from, $to]);
+  return $st->fetchAll();
+}

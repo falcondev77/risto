@@ -2,631 +2,640 @@
 require __DIR__.'/../config.php';
 require __DIR__.'/../functions.php';
 require_admin();
-
 $mode = setting($pdo,'mode') ?? 'auto';
 $defaultCap = (int)(setting($pdo,'default_capacity') ?? '0');
 ?>
-<!doctype html>
-<html lang="it">
+<!DOCTYPE html>
+<html class="dark" lang="it">
 <head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Dashboard — Admin</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+<title>La Mozzata — Admin</title>
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@300;400;500;700&family=Playfair+Display:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms"></script>
+<script>
+tailwind.config = {
+  darkMode: "class",
+  theme: {
+    extend: {
+      colors: { "primary": "#ec4913", "background-dark": "#221510", "surface-dark": "#2e1e19" },
+      fontFamily: { "display": ["Manrope","sans-serif"], "serif": ["Playfair Display","serif"] }
+    }
+  }
+}
+</script>
 <style>
-*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-:root {
-  --bg: #f8f8f7;
-  --surface: #ffffff;
-  --border: #e4e4e4;
-  --text: #1a1a1a;
-  --text-muted: #6b6b6b;
-  --text-light: #b0b0b0;
-  --accent: #1a1a1a;
-  --radius: 14px;
-  --radius-sm: 9px;
-  --shadow: 0 1px 3px rgba(0,0,0,.06), 0 1px 2px rgba(0,0,0,.04);
-  --sidebar-w: 220px;
-}
-body { font-family: 'Inter', system-ui, sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; line-height: 1.55; }
-
-/* LAYOUT */
-.layout { display: flex; min-height: 100vh; }
-
-.sidebar {
-  width: var(--sidebar-w);
-  background: var(--surface);
-  border-right: 1px solid var(--border);
-  display: flex;
-  flex-direction: column;
-  position: fixed;
-  top: 0; left: 0; bottom: 0;
-  z-index: 20;
-  transition: transform .2s;
-}
-.sidebar-logo {
-  padding: 20px 18px 16px;
-  border-bottom: 1px solid var(--border);
-}
-.sidebar-logo .brand { font-size: 15px; font-weight: 600; letter-spacing: -.2px; }
-.sidebar-logo .sub { font-size: 11px; color: var(--text-muted); margin-top: 1px; }
-
-.sidebar-nav { flex: 1; padding: 10px 8px; }
-.nav-item {
-  display: flex; align-items: center; gap: 9px;
-  padding: 8px 10px;
-  border-radius: 8px;
-  font-size: 13.5px;
-  font-weight: 500;
-  color: var(--text-muted);
-  cursor: pointer;
-  transition: all .12s;
-  border: none; background: none; width: 100%; text-align: left;
-}
-.nav-item:hover { background: var(--bg); color: var(--text); }
-.nav-item.active { background: var(--text); color: #fff; }
-.nav-item .nav-icon { font-size: 15px; width: 18px; text-align: center; flex-shrink: 0; }
-
-.sidebar-footer {
-  padding: 12px 8px;
-  border-top: 1px solid var(--border);
-}
-
-.main {
-  margin-left: var(--sidebar-w);
-  flex: 1;
-  min-width: 0;
-  display: flex;
-  flex-direction: column;
-}
-
-.topbar {
-  background: var(--surface);
-  border-bottom: 1px solid var(--border);
-  height: 54px;
-  padding: 0 24px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  position: sticky;
-  top: 0;
-  z-index: 10;
-}
-.topbar-title { font-size: 14px; font-weight: 600; }
-.topbar-right { display: flex; align-items: center; gap: 12px; }
-
-.pulse {
-  display: inline-flex; align-items: center; gap: 6px;
-  font-size: 12px;
-  color: var(--text-muted);
-}
-.pulse-dot {
-  width: 7px; height: 7px;
-  border-radius: 50%;
-  background: #22c55e;
-  animation: pulse 1.8s ease-in-out infinite;
-}
-@keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.3} }
-
-.content { padding: 24px; max-width: 1100px; }
-
-/* STATS ROW */
-.stats-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
-  gap: 12px;
-  margin-bottom: 20px;
-}
-.stat-card {
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  padding: 16px 18px;
-  box-shadow: var(--shadow);
-}
-.stat-label { font-size: 11px; font-weight: 600; color: var(--text-muted); text-transform: uppercase; letter-spacing: .5px; margin-bottom: 6px; }
-.stat-value { font-size: 22px; font-weight: 600; letter-spacing: -.5px; }
-.stat-sub { font-size: 12px; color: var(--text-muted); margin-top: 3px; }
-
-/* CARDS */
-.card {
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  box-shadow: var(--shadow);
-  margin-bottom: 16px;
-  overflow: hidden;
-}
-.card-head {
-  padding: 16px 20px;
-  border-bottom: 1px solid var(--border);
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  flex-wrap: wrap;
-  gap: 10px;
-}
-.card-head-title { font-size: 13.5px; font-weight: 600; }
-.card-body { padding: 18px 20px; }
-.card-body-pad { padding: 20px; }
-
-/* SETTINGS GRID */
-.settings-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 14px;
-}
-.settings-group { display: flex; flex-direction: column; gap: 5px; }
-.settings-label { font-size: 11px; font-weight: 600; color: var(--text-muted); text-transform: uppercase; letter-spacing: .5px; }
-.settings-row { display: flex; gap: 8px; }
-
-/* FORM ELEMENTS */
-input, select {
-  padding: 8px 12px;
-  border: 1px solid var(--border);
-  border-radius: var(--radius-sm);
-  font-family: inherit;
-  font-size: 13.5px;
-  color: var(--text);
-  background: var(--surface);
-  outline: none;
-  transition: border-color .15s, box-shadow .15s;
-}
-input:focus, select:focus {
-  border-color: var(--text);
-  box-shadow: 0 0 0 3px rgba(26,26,26,.07);
-}
-input::placeholder { color: var(--text-light); }
-
-.btn {
-  padding: 8px 14px;
-  border-radius: var(--radius-sm);
-  font-family: inherit;
-  font-size: 13px;
-  font-weight: 500;
-  cursor: pointer;
-  border: 1px solid;
-  transition: all .12s;
-  display: inline-flex; align-items: center; gap: 6px;
-  white-space: nowrap;
-}
-.btn:disabled { opacity: .5; cursor: not-allowed; }
-.btn-primary { background: var(--accent); color: #fff; border-color: var(--accent); }
-.btn-primary:hover:not(:disabled) { background: #333; }
-.btn-ghost { background: transparent; color: var(--text); border-color: var(--border); }
-.btn-ghost:hover:not(:disabled) { background: var(--bg); border-color: var(--text); }
-.btn-sm { padding: 5px 10px; font-size: 12px; }
-.btn-success { background: #166534; color: #fff; border-color: #166534; }
-.btn-success:hover:not(:disabled) { background: #15803d; }
-.btn-danger { background: transparent; color: #991b1b; border-color: #fecaca; }
-.btn-danger:hover:not(:disabled) { background: #fef2f2; }
-.btn-warn { background: transparent; color: #92400e; border-color: #fde68a; }
-.btn-warn:hover:not(:disabled) { background: #fffbeb; }
-
-/* MODE BADGE */
-.mode-badge {
-  display: inline-flex; align-items: center; gap: 5px;
-  padding: 4px 10px;
-  border-radius: 20px;
-  font-size: 11.5px;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: .4px;
-}
-.mode-auto { background: #f0fdf4; color: #166534; border: 1px solid #bbf7d0; }
-.mode-manual { background: #fffbeb; color: #92400e; border: 1px solid #fde68a; }
-
-/* MSG */
-.msg {
-  padding: 9px 12px;
-  border-radius: var(--radius-sm);
-  font-size: 12.5px;
-  font-weight: 500;
-  display: none;
-  margin-top: 10px;
-}
-.msg.show { display: block; }
-.msg-success { background: #f0fdf4; border: 1px solid #bbf7d0; color: #166534; }
-.msg-error { background: #fef2f2; border: 1px solid #fecaca; color: #991b1b; }
+body { font-family: 'Manrope', sans-serif; }
+.ms { font-family: 'Material Symbols Outlined'; font-style: normal; font-weight: normal; font-size: 20px; line-height: 1; white-space: nowrap; display: inline-block; }
 
 /* TABLE */
-.table-wrap { overflow-x: auto; }
-table { width: 100%; border-collapse: collapse; font-size: 13px; }
-thead th {
-  padding: 10px 14px;
-  background: var(--bg);
-  border-bottom: 1px solid var(--border);
-  font-size: 11px;
-  font-weight: 600;
-  color: var(--text-muted);
-  text-transform: uppercase;
-  letter-spacing: .5px;
-  white-space: nowrap;
-  text-align: left;
-}
-tbody td {
-  padding: 11px 14px;
-  border-bottom: 1px solid var(--border);
-  vertical-align: middle;
-}
-tbody tr:last-child td { border-bottom: none; }
-tbody tr:hover td { background: #fafafa; }
-.actions { display: flex; gap: 6px; flex-wrap: wrap; }
+.dtable { width:100%; border-collapse:collapse; font-size:13px; }
+.dtable thead th { padding:10px 14px; background:rgba(255,255,255,.03); border-bottom:1px solid rgba(255,255,255,.07); font-size:11px; font-weight:700; color:#64748b; text-transform:uppercase; letter-spacing:.6px; text-align:left; white-space:nowrap; }
+.dtable tbody td { padding:11px 14px; border-bottom:1px solid rgba(255,255,255,.05); vertical-align:middle; color:#e2e8f0; }
+.dtable tbody tr:last-child td { border-bottom:none; }
+.dtable tbody tr:hover td { background:rgba(255,255,255,.02); }
 
-/* STATUS BADGE */
-.badge {
-  display: inline-flex; align-items: center;
-  padding: 2px 8px;
-  border-radius: 20px;
-  font-size: 10.5px;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: .4px;
-  white-space: nowrap;
-}
-.badge-confirmed { background: #f0fdf4; color: #166534; border: 1px solid #bbf7d0; }
-.badge-pending { background: #fffbeb; color: #92400e; border: 1px solid #fde68a; }
-.badge-cancelled { background: #f5f5f5; color: #737373; border: 1px solid #e5e5e5; }
-.badge-rejected { background: #fef2f2; color: #991b1b; border: 1px solid #fecaca; }
+/* BADGES */
+.bdg { display:inline-flex; align-items:center; padding:2px 9px; border-radius:99px; font-size:10.5px; font-weight:700; text-transform:uppercase; letter-spacing:.4px; white-space:nowrap; }
+.bdg-confirmed { background:rgba(34,197,94,.12); color:#4ade80; border:1px solid rgba(34,197,94,.25); }
+.bdg-pending { background:rgba(251,191,36,.12); color:#fbbf24; border:1px solid rgba(251,191,36,.25); }
+.bdg-cancelled { background:rgba(148,163,184,.1); color:#94a3b8; border:1px solid rgba(148,163,184,.2); }
+.bdg-rejected { background:rgba(239,68,68,.12); color:#f87171; border:1px solid rgba(239,68,68,.25); }
 
-.empty { text-align: center; padding: 40px; color: var(--text-muted); font-size: 13.5px; }
+/* BUTTONS */
+.btn-p { background:#ec4913; color:#fff; border:none; border-radius:8px; padding:8px 16px; font-family:inherit; font-size:13px; font-weight:700; cursor:pointer; transition:background .15s; display:inline-flex; align-items:center; gap:6px; }
+.btn-p:hover:not(:disabled) { background:#d43f0e; }
+.btn-p:disabled { opacity:.5; cursor:not-allowed; }
+.btn-g { background:rgba(255,255,255,.06); color:#94a3b8; border:1px solid rgba(255,255,255,.1); border-radius:8px; padding:7px 13px; font-family:inherit; font-size:13px; font-weight:500; cursor:pointer; transition:all .12s; display:inline-flex; align-items:center; gap:6px; }
+.btn-g:hover:not(:disabled) { background:rgba(255,255,255,.1); color:#e2e8f0; }
+.btn-g:disabled { opacity:.4; cursor:not-allowed; }
+.abt { display:inline-flex; align-items:center; gap:4px; padding:4px 10px; border-radius:6px; font-family:inherit; font-size:11.5px; font-weight:600; cursor:pointer; border:1px solid; transition:all .12s; white-space:nowrap; }
+.abt:disabled { opacity:.4; cursor:not-allowed; }
+.abt-ok { background:rgba(34,197,94,.1); color:#4ade80; border-color:rgba(34,197,94,.25); }
+.abt-ok:hover:not(:disabled) { background:rgba(34,197,94,.2); }
+.abt-warn { background:rgba(251,191,36,.1); color:#fbbf24; border-color:rgba(251,191,36,.25); }
+.abt-warn:hover:not(:disabled) { background:rgba(251,191,36,.2); }
+.abt-del { background:rgba(239,68,68,.08); color:#f87171; border-color:rgba(239,68,68,.2); }
+.abt-del:hover:not(:disabled) { background:rgba(239,68,68,.18); }
+.abt-x { background:rgba(239,68,68,.1); color:#f87171; border-color:rgba(239,68,68,.25); }
+.abt-x:hover:not(:disabled) { background:rgba(239,68,68,.2); }
 
-/* HAMBURGER */
-.hamburger {
-  display: none;
-  background: none; border: none; cursor: pointer; padding: 6px;
-  flex-direction: column; gap: 4px;
-}
-.hamburger span { display: block; width: 20px; height: 2px; background: var(--text); border-radius: 2px; }
+/* INPUTS */
+.fi { background:rgba(255,255,255,.06); border:1px solid rgba(255,255,255,.1); border-radius:8px; padding:8px 12px; font-family:inherit; font-size:13.5px; color:#e2e8f0; outline:none; transition:border-color .15s, box-shadow .15s; }
+.fi:focus { border-color:#ec4913; box-shadow:0 0 0 3px rgba(236,73,19,.15); }
+.fi::placeholder { color:#334155; }
 
-.overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,.3); z-index: 15; }
+/* CARD */
+.card { background:#2e1e19; border:1px solid rgba(255,255,255,.06); border-radius:14px; overflow:hidden; margin-bottom:16px; }
+.ch { padding:15px 20px; border-bottom:1px solid rgba(255,255,255,.06); display:flex; align-items:center; justify-content:space-between; gap:10px; flex-wrap:wrap; }
+.cht { font-size:13.5px; font-weight:700; color:#e2e8f0; display:flex; align-items:center; gap:8px; }
+.cb { padding:20px; }
 
-/* TAB PANEL */
-.tab-panel { display: none; }
-.tab-panel.active { display: block; }
+/* MSG */
+.msg { padding:9px 13px; border-radius:8px; font-size:12.5px; font-weight:500; display:none; margin-top:10px; }
+.msg.show { display:block; }
+.msg-success { background:rgba(34,197,94,.12); border:1px solid rgba(34,197,94,.25); color:#4ade80; }
+.msg-error { background:rgba(239,68,68,.12); border:1px solid rgba(239,68,68,.25); color:#f87171; }
 
-/* LOGOUT LINK */
-.logout-link {
-  display: flex; align-items: center; gap: 8px;
-  padding: 8px 10px;
-  border-radius: 8px;
-  font-size: 13px;
-  font-weight: 500;
-  color: var(--text-muted);
-  text-decoration: none;
-  transition: all .12s;
-  width: 100%;
-}
-.logout-link:hover { background: #fef2f2; color: #991b1b; }
+/* NAV */
+.nv { display:flex; align-items:center; gap:10px; padding:9px 12px; border-radius:8px; font-size:13.5px; font-weight:500; color:#64748b; cursor:pointer; transition:all .12s; border:none; background:none; width:100%; text-align:left; text-decoration:none; }
+.nv:hover { background:rgba(255,255,255,.05); color:#94a3b8; }
+.nv.active { background:rgba(236,73,19,.15); color:#ec4913; }
 
-@media (max-width: 768px) {
-  .sidebar { transform: translateX(-100%); }
-  .sidebar.open { transform: translateX(0); box-shadow: 4px 0 20px rgba(0,0,0,.15); }
-  .overlay.show { display: block; }
-  .main { margin-left: 0; }
-  .hamburger { display: flex; }
-  .content { padding: 16px; }
-  .settings-grid { grid-template-columns: 1fr; }
-  .stats-grid { grid-template-columns: 1fr 1fr; }
-  .card-head { flex-direction: column; align-items: flex-start; }
-  .topbar { padding: 0 16px; }
-}
-@media (max-width: 400px) {
-  .stats-grid { grid-template-columns: 1fr; }
+/* STAT */
+.sc { background:#2e1e19; border:1px solid rgba(255,255,255,.06); border-radius:12px; padding:16px 18px; }
+.sl { font-size:11px; font-weight:700; color:#475569; text-transform:uppercase; letter-spacing:.6px; margin-bottom:6px; }
+.sv { font-size:22px; font-weight:700; color:#e2e8f0; letter-spacing:-.5px; }
+.ss { font-size:12px; color:#64748b; margin-top:3px; }
+
+/* TOGGLE */
+.tgl { position:relative; display:inline-flex; align-items:center; cursor:pointer; }
+.tgl input { opacity:0; width:0; height:0; position:absolute; }
+.tgl-tr { width:36px; height:20px; background:rgba(255,255,255,.1); border-radius:99px; transition:background .2s; border:1px solid rgba(255,255,255,.1); }
+.tgl input:checked + .tgl-tr { background:#ec4913; border-color:#ec4913; }
+.tgl-th { position:absolute; left:3px; top:50%; transform:translateY(-50%); width:14px; height:14px; background:#fff; border-radius:50%; transition:transform .2s; pointer-events:none; }
+.tgl input:checked ~ .tgl-th { transform:translate(16px,-50%); }
+
+/* MINI CAL */
+.mcg { display:grid; grid-template-columns:repeat(7,1fr); gap:3px; }
+.mcd-n { text-align:center; font-size:10px; font-weight:700; color:#334155; padding:4px 0 6px; text-transform:uppercase; }
+.mcd { aspect-ratio:1; display:flex; align-items:center; justify-content:center; font-size:12px; font-weight:500; color:#64748b; border-radius:6px; cursor:pointer; transition:all .12s; border:none; background:none; font-family:inherit; }
+.mcd:hover:not(.empty):not(.past) { background:rgba(255,255,255,.07); }
+.mcd.past { color:#1e293b; cursor:default; }
+.mcd.empty { cursor:default; }
+.mcd.today { color:#ec4913; font-weight:700; }
+.mcd.closed { background:rgba(236,73,19,.18); color:#ec4913; font-weight:700; border:1px solid rgba(236,73,19,.3); }
+.mcd.closed:hover:not(.past) { background:rgba(236,73,19,.3); }
+
+/* SLOT ROW */
+.sr { display:flex; align-items:center; gap:10px; padding:10px 0; border-bottom:1px solid rgba(255,255,255,.05); }
+.sr:last-child { border-bottom:none; }
+
+/* TAB */
+.tab-panel { display:none; }
+.tab-panel.active { display:block; }
+
+/* MISC */
+.pulse-dot { width:7px; height:7px; border-radius:50%; background:#4ade80; animation:pulse 1.8s ease-in-out infinite; }
+@keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.25} }
+.empty-st { text-align:center; padding:48px 20px; color:#334155; font-size:14px; }
+.spinner { width:12px; height:12px; border:2px solid rgba(255,255,255,.2); border-top-color:#fff; border-radius:50%; animation:spin .5s linear infinite; display:none; }
+.loading .spinner { display:inline-block; }
+.loading .btn-label { display:none; }
+@keyframes spin { to { transform:rotate(360deg); } }
+.tscroll { overflow-x:auto; }
+
+@media (max-width:768px) {
+  .sidebar { transform:translateX(-100%); transition:transform .25s; }
+  .sidebar.open { transform:translateX(0); box-shadow:4px 0 30px rgba(0,0,0,.4); }
+  .ml-sidebar { margin-left:0!important; }
+  .overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,.5); z-index:30; }
+  .overlay.show { display:block; }
 }
 </style>
 </head>
-<body>
+<body class="bg-[#221510] text-slate-100 min-h-screen">
 <div class="overlay" id="overlay"></div>
 
-<div class="layout">
-  <aside class="sidebar" id="sidebar">
-    <div class="sidebar-logo">
-      <div class="brand">Ristorante</div>
-      <div class="sub">Pannello amministratore</div>
+<!-- SIDEBAR -->
+<aside class="sidebar fixed top-0 left-0 h-screen w-64 bg-[#2e1e19] border-r border-white/[.06] flex flex-col z-40">
+  <div class="px-6 py-5 border-b border-white/[.06]">
+    <div class="font-serif text-xl text-primary tracking-wide">La Mozzata</div>
+    <div class="text-xs text-slate-500 mt-0.5">Pannello Admin</div>
+  </div>
+  <nav class="flex-1 p-3 space-y-0.5">
+    <button class="nv active" data-tab="bookings" onclick="switchTab('bookings',this)">
+      <span class="ms text-[18px]">calendar_month</span> Prenotazioni
+    </button>
+    <button class="nv" data-tab="cancellations" onclick="switchTab('cancellations',this)">
+      <span class="ms text-[18px]">cancel</span> Cancellazioni
+    </button>
+    <button class="nv" data-tab="settings" onclick="switchTab('settings',this)">
+      <span class="ms text-[18px]">settings</span> Impostazioni
+    </button>
+  </nav>
+  <div class="p-3 border-t border-white/[.06]">
+    <a href="/" class="nv"><span class="ms text-[18px]">open_in_new</span> Vai al sito</a>
+    <a href="/admin/logout.php" class="nv"><span class="ms text-[18px]">logout</span> Esci</a>
+  </div>
+</aside>
+
+<!-- MAIN -->
+<div class="ml-sidebar ml-64 flex flex-col min-h-screen">
+
+  <!-- TOPBAR -->
+  <header class="sticky top-0 z-20 bg-[#2e1e19]/80 backdrop-blur-md border-b border-white/[.06] h-14 px-5 flex items-center justify-between">
+    <div class="flex items-center gap-3">
+      <button class="md:hidden p-1.5 flex flex-col gap-1" id="hamburger">
+        <span class="block w-5 h-0.5 bg-slate-400 rounded"></span>
+        <span class="block w-5 h-0.5 bg-slate-400 rounded"></span>
+        <span class="block w-5 h-0.5 bg-slate-400 rounded"></span>
+      </button>
+      <span class="font-semibold text-sm text-slate-200" id="topbarTitle">Prenotazioni</span>
     </div>
-    <nav class="sidebar-nav">
-      <button class="nav-item active" data-tab="bookings" onclick="switchTab('bookings', this)">
-        <span class="nav-icon">📋</span> Prenotazioni
-      </button>
-      <button class="nav-item" data-tab="cancellations" onclick="switchTab('cancellations', this)">
-        <span class="nav-icon">❌</span> Cancellazioni
-      </button>
-      <button class="nav-item" data-tab="settings" onclick="switchTab('settings', this)">
-        <span class="nav-icon">⚙️</span> Impostazioni
-      </button>
-    </nav>
-    <div class="sidebar-footer">
-      <a href="/admin/logout.php" class="logout-link">
-        <span>↩</span> Esci
-      </a>
+    <div class="flex items-center gap-3">
+      <div class="flex items-center gap-1.5 text-xs text-slate-500">
+        <div class="pulse-dot"></div> Live
+      </div>
+      <div id="modeBadge" class="px-3 py-1 rounded-full text-[10.5px] font-bold uppercase tracking-wider <?= $mode==='auto' ? 'bg-green-500/10 text-green-400 border border-green-500/25' : 'bg-amber-500/10 text-amber-400 border border-amber-500/25' ?>"><?= h($mode) ?></div>
     </div>
-  </aside>
+  </header>
 
-  <div class="main">
-    <header class="topbar">
-      <div style="display:flex;align-items:center;gap:12px">
-        <button class="hamburger" id="hamburger">
-          <span></span><span></span><span></span>
-        </button>
-        <span class="topbar-title" id="topbarTitle">Prenotazioni</span>
-      </div>
-      <div class="topbar-right">
-        <div class="pulse"><div class="pulse-dot"></div> Live</div>
-        <span id="modeBadge" class="mode-badge <?= $mode === 'auto' ? 'mode-auto' : 'mode-manual' ?>"><?= h($mode) ?></span>
-      </div>
-    </header>
+  <main class="flex-1 p-5 md:p-6 w-full max-w-[1100px]">
 
-    <div class="content">
-      <!-- STATS -->
-      <div class="stats-grid">
-        <div class="stat-card">
-          <div class="stat-label">Coperti oggi</div>
-          <div class="stat-value" id="statTodayUsed">—</div>
-          <div class="stat-sub" id="statTodayCap">su — disponibili</div>
-        </div>
-        <div class="stat-card">
-          <div class="stat-label">Modalità</div>
-          <div class="stat-value" style="font-size:16px;margin-top:4px" id="statMode"><?= h($mode) ?></div>
-          <div class="stat-sub">gestione prenotazioni</div>
-        </div>
-        <div class="stat-card">
-          <div class="stat-label">Coperti default</div>
-          <div class="stat-value" id="statDefaultCap"><?= h((string)$defaultCap) ?></div>
-          <div class="stat-sub">per giorno</div>
-        </div>
-        <div class="stat-card">
-          <div class="stat-label">Totale attive</div>
-          <div class="stat-value" id="statTotal">—</div>
-          <div class="stat-sub">prenotazioni</div>
-        </div>
-      </div>
+    <!-- STATS -->
+    <div class="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">
+      <div class="sc"><div class="sl">Coperti oggi</div><div class="sv" id="statTodayUsed">—</div><div class="ss" id="statTodayCap">su — posti</div></div>
+      <div class="sc"><div class="sl">Modalità</div><div class="sv text-base mt-1" id="statMode"><?= h($mode) ?></div><div class="ss">gestione</div></div>
+      <div class="sc"><div class="sl">Cap. default</div><div class="sv" id="statDefaultCap"><?= h((string)$defaultCap) ?></div><div class="ss">per slot</div></div>
+      <div class="sc"><div class="sl">Prenotazioni</div><div class="sv" id="statTotal">—</div><div class="ss">attive</div></div>
+    </div>
 
-      <!-- BOOKINGS TAB -->
-      <div class="tab-panel active" id="tab_bookings">
+    <!-- BOOKINGS -->
+    <div class="tab-panel active" id="tab_bookings">
+      <div class="card">
+        <div class="ch">
+          <span class="cht"><span class="ms text-[18px] text-primary">calendar_month</span> Prenotazioni attive</span>
+          <button class="btn-g text-xs" onclick="loadBookings()"><span class="ms text-[15px]">refresh</span> Aggiorna</button>
+        </div>
+        <div class="tscroll"><div id="bookingsTable"><div class="empty-st">Caricamento...</div></div></div>
+      </div>
+    </div>
+
+    <!-- CANCELLATIONS -->
+    <div class="tab-panel" id="tab_cancellations">
+      <div class="card">
+        <div class="ch">
+          <span class="cht"><span class="ms text-[18px]" style="color:#f87171">cancel</span> Cancellazioni</span>
+          <button class="btn-g text-xs" onclick="loadCancellations()"><span class="ms text-[15px]">refresh</span> Aggiorna</button>
+        </div>
+        <div class="tscroll"><div id="cancellationsTable"><div class="empty-st">Caricamento...</div></div></div>
+      </div>
+    </div>
+
+    <!-- SETTINGS -->
+    <div class="tab-panel" id="tab_settings">
+      <div class="grid md:grid-cols-2 gap-4">
+
+        <!-- Mode -->
         <div class="card">
-          <div class="card-head">
-            <span class="card-head-title">Prenotazioni attive</span>
-            <button class="btn btn-ghost btn-sm" onclick="loadBookings()">↻ Aggiorna</button>
-          </div>
-          <div class="table-wrap">
-            <div id="bookingsTable"><div class="empty">Caricamento...</div></div>
-          </div>
-        </div>
-      </div>
-
-      <!-- CANCELLATIONS TAB -->
-      <div class="tab-panel" id="tab_cancellations">
-        <div class="card">
-          <div class="card-head">
-            <span class="card-head-title">Cancellazioni</span>
-            <button class="btn btn-ghost btn-sm" onclick="loadCancellations()">↻ Aggiorna</button>
-          </div>
-          <div class="table-wrap">
-            <div id="cancellationsTable"><div class="empty">Caricamento...</div></div>
-          </div>
-        </div>
-      </div>
-
-      <!-- SETTINGS TAB -->
-      <div class="tab-panel" id="tab_settings">
-        <div class="card">
-          <div class="card-head">
-            <span class="card-head-title">Modalità gestione</span>
-          </div>
-          <div class="card-body-pad">
-            <p style="font-size:13px;color:var(--text-muted);margin-bottom:14px">
-              In modalità <b>automatica</b> le prenotazioni vengono confermate subito. In modalità <b>manuale</b> devono essere approvate dall'admin.
+          <div class="ch"><span class="cht"><span class="ms text-[18px] text-amber-400">tune</span> Modalità gestione</span></div>
+          <div class="cb">
+            <p class="text-sm text-slate-400 mb-4 leading-relaxed">
+              In modalità <strong class="text-slate-200">automatica</strong> le prenotazioni sono confermate subito.
+              In modalità <strong class="text-slate-200">manuale</strong> devono essere approvate.
             </p>
-            <button class="btn btn-primary" id="toggleMode">Cambia modalità</button>
+            <button class="btn-p" id="toggleMode"><span class="spinner"></span><span class="btn-label">Cambia modalità</span></button>
             <div id="modeMsg" class="msg"></div>
           </div>
         </div>
 
+        <!-- Capacity by date -->
         <div class="card">
-          <div class="card-head">
-            <span class="card-head-title">Coperti</span>
-          </div>
-          <div class="card-body-pad">
-            <div class="settings-grid">
-              <div class="settings-group">
-                <div class="settings-label">Coperti default (tutti i giorni)</div>
-                <div class="settings-row">
-                  <input id="capDefault" type="number" min="0" value="<?= h((string)$defaultCap) ?>" style="flex:1" />
-                  <button class="btn btn-primary" id="setCapDefault">Salva</button>
-                </div>
+          <div class="ch"><span class="cht"><span class="ms text-[18px]" style="color:#60a5fa">group</span> Coperti per data</span></div>
+          <div class="cb space-y-4">
+            <div>
+              <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Default (tutti i giorni)</label>
+              <div class="flex gap-2">
+                <input id="capDefault" type="number" min="0" value="<?= h((string)$defaultCap) ?>" class="fi flex-1" placeholder="Es. 30" />
+                <button class="btn-p" id="setCapDefault">Salva</button>
               </div>
-              <div class="settings-group">
-                <div class="settings-label">Override per data specifica</div>
-                <div class="settings-row" style="flex-wrap:wrap;gap:6px">
-                  <input id="capDate" type="date" style="flex:1;min-width:120px" />
-                  <input id="capValue" type="number" min="0" placeholder="Coperti" style="flex:1;min-width:90px" />
-                  <button class="btn btn-primary" id="setCapDay">Salva</button>
-                </div>
+            </div>
+            <div>
+              <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Override per data specifica</label>
+              <div class="flex gap-2 flex-wrap">
+                <input id="capDate" type="date" class="fi flex-1 min-w-[130px]" />
+                <input id="capValue" type="number" min="0" placeholder="Coperti" class="fi w-24" />
+                <button class="btn-p" id="setCapDay">Salva</button>
               </div>
             </div>
             <div id="settingsMsg" class="msg"></div>
           </div>
         </div>
+
+        <!-- Time Slots — full width -->
+        <div class="card md:col-span-2">
+          <div class="ch">
+            <span class="cht"><span class="ms text-[18px] text-primary">schedule</span> Orari e coperti per fascia</span>
+            <button class="btn-g text-xs" onclick="loadSlots()"><span class="ms text-[15px]">refresh</span> Aggiorna</button>
+          </div>
+          <div class="cb">
+            <div id="slotsList" class="mb-5 min-h-[40px]"></div>
+            <div class="pt-4 border-t border-white/[.06]">
+              <p class="text-xs font-bold text-slate-500 uppercase tracking-wider mb-3">Aggiungi orario personalizzato</p>
+              <div class="flex gap-3 flex-wrap items-end">
+                <div class="flex flex-col gap-1.5">
+                  <label class="text-xs text-slate-500">Orario (HH:MM)</label>
+                  <input id="newSlotTime" type="time" step="600" class="fi w-36" />
+                </div>
+                <div class="flex flex-col gap-1.5">
+                  <label class="text-xs text-slate-500">Coperti</label>
+                  <input id="newSlotCap" type="number" min="1" max="999" placeholder="30" class="fi w-24" />
+                </div>
+                <button class="btn-p" id="addSlotBtn" onclick="addSlot()">
+                  <span class="spinner"></span>
+                  <span class="btn-label"><span class="ms text-[15px]">add</span> Aggiungi</span>
+                </button>
+              </div>
+              <div id="slotMsg" class="msg mt-3"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Closure Days — full width -->
+        <div class="card md:col-span-2">
+          <div class="ch">
+            <span class="cht"><span class="ms text-[18px]" style="color:#f87171">event_busy</span> Giorni di chiusura</span>
+            <div class="flex items-center gap-2">
+              <button class="btn-g py-1.5 px-2" id="closurePrev"><span class="ms text-[16px]">chevron_left</span></button>
+              <span class="text-sm font-semibold text-slate-300 w-36 text-center" id="closureMonthLabel"></span>
+              <button class="btn-g py-1.5 px-2" id="closureNext"><span class="ms text-[16px]">chevron_right</span></button>
+            </div>
+          </div>
+          <div class="cb">
+            <div class="grid md:grid-cols-2 gap-6">
+              <div>
+                <div class="mcg mb-1" id="closureCal"></div>
+                <p class="text-xs text-slate-600 mt-3">Clicca su un giorno per impostarlo come chiusura o riaprirlo.</p>
+                <div id="closureMsg" class="msg mt-3"></div>
+              </div>
+              <div>
+                <p class="text-xs font-bold text-slate-500 uppercase tracking-wider mb-3">Prossime chiusure</p>
+                <div id="closureList" class="space-y-2"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
       </div>
-    </div>
-  </div>
-</div>
+    </div><!-- /settings -->
+
+  </main>
+</div><!-- /main -->
 
 <script>
+const TITLES = { bookings:'Prenotazioni', cancellations:'Cancellazioni', settings:'Impostazioni' };
 let currentMode = '<?= h($mode) ?>';
 let pollTimer = null;
 
+// TAB
 function switchTab(tab, btn) {
   document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
-  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  document.querySelectorAll('[data-tab]').forEach(n => n.classList.remove('active'));
   document.getElementById('tab_' + tab).classList.add('active');
   btn.classList.add('active');
-  const titles = { bookings: 'Prenotazioni', cancellations: 'Cancellazioni', settings: 'Impostazioni' };
-  document.getElementById('topbarTitle').textContent = titles[tab] || tab;
+  document.getElementById('topbarTitle').textContent = TITLES[tab] || tab;
   closeSidebar();
+  if (tab === 'settings') { loadSlots(); loadClosureDays(); }
 }
 
+// SIDEBAR MOBILE
 function closeSidebar() {
-  document.getElementById('sidebar').classList.remove('open');
+  document.querySelector('.sidebar').classList.remove('open');
   document.getElementById('overlay').classList.remove('show');
 }
-
 document.getElementById('hamburger').addEventListener('click', () => {
-  document.getElementById('sidebar').classList.toggle('open');
+  document.querySelector('.sidebar').classList.toggle('open');
   document.getElementById('overlay').classList.toggle('show');
 });
 document.getElementById('overlay').addEventListener('click', closeSidebar);
 
-function badge(status) {
-  const map = {
-    confirmed: ['badge-confirmed','Confermata'],
-    pending:   ['badge-pending','In attesa'],
-    cancelled: ['badge-cancelled','Cancellata'],
-    rejected:  ['badge-rejected','Rifiutata'],
-  };
-  const [cls, lbl] = map[status] || ['badge-cancelled', status];
-  return `<span class="badge ${cls}">${lbl}</span>`;
+// HELPERS
+function badge(s) {
+  const m = { confirmed:['bdg-confirmed','Confermata'], pending:['bdg-pending','In attesa'], cancelled:['bdg-cancelled','Cancellata'], rejected:['bdg-rejected','Rifiutata'] };
+  const [cls,lbl] = m[s] || ['bdg-cancelled',s];
+  return `<span class="bdg ${cls}">${lbl}</span>`;
 }
+function showMsg(el, text, type, ms=4000) {
+  el.textContent = text; el.className = 'msg show msg-' + type;
+  if (ms) setTimeout(() => el.className = 'msg', ms);
+}
+function setLoading(btn, on) { btn.disabled = on; btn.classList.toggle('loading', on); }
 
+// BOOKINGS
 async function loadBookings() {
   try {
-    const r = await fetch('/api/admin/list_bookings.php');
-    const j = await r.json();
+    const j = await fetch('/api/admin/list_bookings.php').then(r => r.json());
     if (!j.ok) return;
 
     currentMode = j.mode;
     document.getElementById('statTodayUsed').textContent = j.today_used;
-    document.getElementById('statTodayCap').textContent = 'su ' + j.today_capacity + ' disponibili';
+    document.getElementById('statTodayCap').textContent = 'su ' + j.today_capacity + ' posti';
     document.getElementById('statMode').textContent = j.mode;
     document.getElementById('statTotal').textContent = j.rows.length;
 
-    const modeBadge = document.getElementById('modeBadge');
-    modeBadge.textContent = j.mode;
-    modeBadge.className = 'mode-badge ' + (j.mode === 'auto' ? 'mode-auto' : 'mode-manual');
+    const mb = document.getElementById('modeBadge');
+    mb.textContent = j.mode;
+    mb.className = 'px-3 py-1 rounded-full text-[10.5px] font-bold uppercase tracking-wider ' +
+      (j.mode==='auto' ? 'bg-green-500/10 text-green-400 border border-green-500/25' : 'bg-amber-500/10 text-amber-400 border border-amber-500/25');
 
-    const container = document.getElementById('bookingsTable');
-    if (j.rows.length === 0) { container.innerHTML = '<div class="empty">Nessuna prenotazione.</div>'; return; }
+    const ct = document.getElementById('bookingsTable');
+    if (!j.rows.length) { ct.innerHTML = '<div class="empty-st">Nessuna prenotazione attiva.</div>'; return; }
 
-    container.innerHTML = `<table>
-      <thead><tr>
-        <th>Data</th><th>Orario</th><th>Nome</th><th>Email</th><th>Telefono</th><th>Persone</th><th>Stato</th><th>Azioni</th>
-      </tr></thead>
-      <tbody>
-        ${j.rows.map(x => `<tr>
-          <td>${x.booking_date}</td>
-          <td>${x.booking_time ? x.booking_time.substring(0,5) : '—'}</td>
-          <td>${x.first_name} ${x.last_name}</td>
-          <td><span style="color:var(--text-muted)">${x.email}</span></td>
-          <td>${x.phone}</td>
-          <td>${x.people}</td>
-          <td>${badge(x.status)}</td>
-          <td><div class="actions">
-            ${j.mode === 'manual' && x.status === 'pending' ? `
-              <button class="btn btn-success btn-sm" data-act="confirm" data-id="${x.id}">Conferma</button>
-              <button class="btn btn-warn btn-sm" data-act="reject" data-id="${x.id}">Rifiuta</button>
-            ` : ''}
-            ${(x.status === 'confirmed' || x.status === 'pending') ? `
-              <button class="btn btn-danger btn-sm" data-act="cancel" data-id="${x.id}">Cancella</button>
-            ` : ''}
-          </div></td>
-        </tr>`).join('')}
-      </tbody>
-    </table>`;
+    ct.innerHTML = `<table class="dtable">
+      <thead><tr><th>Data</th><th>Orario</th><th>Nome</th><th>Email</th><th>Tel.</th><th>Pers.</th><th>Stato</th><th>Azioni</th></tr></thead>
+      <tbody>${j.rows.map(x=>`<tr>
+        <td class="font-semibold">${x.booking_date}</td>
+        <td><span class="text-primary font-bold">${x.booking_time ? x.booking_time.substring(0,5) : '—'}</span></td>
+        <td>${x.first_name} ${x.last_name}</td>
+        <td class="text-slate-400 text-xs">${x.email}</td>
+        <td class="text-slate-400">${x.phone}</td>
+        <td class="font-bold">${x.people}</td>
+        <td>${badge(x.status)}</td>
+        <td><div class="flex gap-1 flex-wrap">
+          ${j.mode==='manual' && x.status==='pending' ? `
+            <button class="abt abt-ok" data-act="confirm" data-id="${x.id}">Conferma</button>
+            <button class="abt abt-warn" data-act="reject" data-id="${x.id}">Rifiuta</button>` : ''}
+          ${(x.status==='confirmed'||x.status==='pending') ? `
+            <button class="abt abt-x" data-act="cancel" data-id="${x.id}">Cancella</button>` : ''}
+        </div></td>
+      </tr>`).join('')}</tbody></table>`;
 
-    container.querySelectorAll('[data-act]').forEach(btn => {
+    ct.querySelectorAll('[data-act]').forEach(btn => {
       btn.addEventListener('click', async () => {
         btn.disabled = true;
-        const fd = new FormData();
-        fd.append('action', btn.dataset.act);
-        fd.append('id', btn.dataset.id);
-        const r2 = await fetch('/api/admin/decision.php', { method: 'POST', body: fd });
-        const j2 = await r2.json();
-        if (!j2.ok) { alert(j2.error || 'Errore'); btn.disabled = false; }
+        const fd = new FormData(); fd.append('action', btn.dataset.act); fd.append('id', btn.dataset.id);
+        const j2 = await fetch('/api/admin/decision.php', { method:'POST', body:fd }).then(r=>r.json());
+        if (!j2.ok) { alert(j2.error||'Errore'); btn.disabled=false; }
         else { loadBookings(); loadCancellations(); }
       });
     });
-  } catch (e) { console.error('loadBookings', e); }
+  } catch(e) { console.error(e); }
 }
 
+// CANCELLATIONS
 async function loadCancellations() {
   try {
-    const r = await fetch('/api/admin/list_cancellations.php');
-    const j = await r.json();
+    const j = await fetch('/api/admin/list_cancellations.php').then(r=>r.json());
     if (!j.ok) return;
-    const container = document.getElementById('cancellationsTable');
-    if (j.rows.length === 0) { container.innerHTML = '<div class="empty">Nessuna cancellazione.</div>'; return; }
-    container.innerHTML = `<table>
+    const ct = document.getElementById('cancellationsTable');
+    if (!j.rows.length) { ct.innerHTML = '<div class="empty-st">Nessuna cancellazione.</div>'; return; }
+    ct.innerHTML = `<table class="dtable">
       <thead><tr><th>Data</th><th>Nome</th><th>Email</th><th>Persone</th><th>Cancellata il</th></tr></thead>
-      <tbody>
-        ${j.rows.map(x => `<tr>
-          <td>${x.booking_date}</td>
-          <td>${x.first_name} ${x.last_name}</td>
-          <td><span style="color:var(--text-muted)">${x.email}</span></td>
-          <td>${x.people}</td>
-          <td><span style="color:var(--text-muted)">${x.updated_at}</span></td>
-        </tr>`).join('')}
-      </tbody>
-    </table>`;
-  } catch (e) { console.error('loadCancellations', e); }
+      <tbody>${j.rows.map(x=>`<tr>
+        <td class="font-semibold">${x.booking_date}</td>
+        <td>${x.first_name} ${x.last_name}</td>
+        <td class="text-slate-400 text-xs">${x.email}</td>
+        <td class="font-bold">${x.people}</td>
+        <td class="text-slate-400 text-xs">${x.updated_at}</td>
+      </tr>`).join('')}</tbody></table>`;
+  } catch(e) { console.error(e); }
 }
 
+// SETTINGS: MODE
 document.getElementById('toggleMode').addEventListener('click', async () => {
   const btn = document.getElementById('toggleMode');
-  btn.disabled = true; btn.textContent = '...';
+  setLoading(btn, true);
   try {
-    const r = await fetch('/api/admin/set_mode.php', { method: 'POST' });
-    const j = await r.json();
-    if (j.ok) {
-      currentMode = j.mode;
-      showMsg(document.getElementById('modeMsg'), 'Modalità cambiata: ' + j.mode, 'success');
-      loadBookings();
-    }
+    const j = await fetch('/api/admin/set_mode.php', { method:'POST' }).then(r=>r.json());
+    if (j.ok) { currentMode=j.mode; showMsg(document.getElementById('modeMsg'), 'Modalità: '+j.mode, 'success'); loadBookings(); }
   } catch {}
-  btn.disabled = false; btn.textContent = 'Cambia modalità';
+  setLoading(btn, false);
 });
 
+// SETTINGS: CAPACITY
 document.getElementById('setCapDay').addEventListener('click', async () => {
-  const d = document.getElementById('capDate').value;
-  const v = document.getElementById('capValue').value;
-  const fd = new FormData(); fd.append('date', d); fd.append('capacity', v);
-  const r = await fetch('/api/admin/set_capacity.php', { method: 'POST', body: fd });
-  const j = await r.json();
-  showMsg(document.getElementById('settingsMsg'), j.ok ? 'Coperti salvati per il giorno selezionato.' : (j.error || 'Errore'), j.ok ? 'success' : 'error');
-  if (j.ok) loadBookings();
+  const fd = new FormData(); fd.append('date', document.getElementById('capDate').value); fd.append('capacity', document.getElementById('capValue').value);
+  const j = await fetch('/api/admin/set_capacity.php', { method:'POST', body:fd }).then(r=>r.json());
+  showMsg(document.getElementById('settingsMsg'), j.ok?'Coperti salvati.':(j.error||'Errore'), j.ok?'success':'error');
+  if(j.ok) loadBookings();
 });
-
 document.getElementById('setCapDefault').addEventListener('click', async () => {
   const v = document.getElementById('capDefault').value;
   const fd = new FormData(); fd.append('default_capacity', v);
-  const r = await fetch('/api/admin/set_capacity.php', { method: 'POST', body: fd });
-  const j = await r.json();
-  if (j.ok) {
-    document.getElementById('statDefaultCap').textContent = v;
-    showMsg(document.getElementById('settingsMsg'), 'Coperti default aggiornati.', 'success');
-    loadBookings();
-  } else {
-    showMsg(document.getElementById('settingsMsg'), j.error || 'Errore', 'error');
-  }
+  const j = await fetch('/api/admin/set_capacity.php', { method:'POST', body:fd }).then(r=>r.json());
+  if(j.ok) { document.getElementById('statDefaultCap').textContent=v; showMsg(document.getElementById('settingsMsg'),'Coperti default aggiornati.','success'); loadBookings(); }
+  else showMsg(document.getElementById('settingsMsg'), j.error||'Errore', 'error');
 });
 
-function showMsg(el, text, type) {
-  el.textContent = text;
-  el.className = 'msg show msg-' + type;
-  setTimeout(() => { el.className = 'msg'; }, 3500);
+// ===== TIME SLOTS =====
+async function loadSlots() {
+  const ct = document.getElementById('slotsList');
+  ct.innerHTML = '<div class="text-sm text-slate-500 py-2">Caricamento...</div>';
+  try {
+    const j = await fetch('/api/admin/get_time_slots.php').then(r=>r.json());
+    if (j.ok) renderSlots(j.slots);
+  } catch(e) { console.error(e); }
 }
+
+function renderSlots(slots) {
+  const ct = document.getElementById('slotsList');
+  if (!slots.length) { ct.innerHTML = '<div class="text-sm text-slate-500 py-2">Nessun orario configurato.</div>'; return; }
+  ct.innerHTML = slots.map(s => `
+    <div class="sr" data-id="${s.id}">
+      <div class="font-bold text-primary w-16 text-base">${s.slot_time}</div>
+      <div class="flex items-center gap-2 flex-1">
+        <span class="text-xs text-slate-500 hidden sm:block">Coperti:</span>
+        <input type="number" min="1" max="999" value="${s.capacity}" class="fi w-20 text-sm py-1.5" data-sid="${s.id}" data-field="cap" />
+      </div>
+      <label class="tgl" title="${s.is_active==1?'Attivo':'Inattivo'}">
+        <input type="checkbox" ${s.is_active==1?'checked':''} data-sid="${s.id}" data-field="act" />
+        <div class="tgl-tr"></div><div class="tgl-th"></div>
+      </label>
+      <span class="text-xs w-10 ${s.is_active==1?'text-green-400':'text-slate-600'}">${s.is_active==1?'On':'Off'}</span>
+      <button class="abt abt-del" data-did="${s.id}"><span class="ms text-[14px]">delete</span></button>
+    </div>
+  `).join('');
+
+  ct.querySelectorAll('[data-field="cap"]').forEach(inp => {
+    inp.addEventListener('change', async () => {
+      const id = inp.dataset.sid;
+      const row = ct.querySelector(`[data-id="${id}"]`);
+      const time = row.querySelector('.text-primary').textContent.trim();
+      const active = row.querySelector('[data-field="act"]').checked ? 1 : 0;
+      await saveSlot(id, time, parseInt(inp.value)||1, active);
+    });
+  });
+
+  ct.querySelectorAll('[data-field="act"]').forEach(chk => {
+    chk.addEventListener('change', async () => {
+      const id = chk.dataset.sid;
+      const row = ct.querySelector(`[data-id="${id}"]`);
+      const time = row.querySelector('.text-primary').textContent.trim();
+      const cap = parseInt(row.querySelector('[data-field="cap"]').value)||1;
+      const lbl = row.querySelector('.text-xs.w-10');
+      await saveSlot(id, time, cap, chk.checked?1:0);
+      lbl.textContent = chk.checked?'On':'Off';
+      lbl.className = `text-xs w-10 ${chk.checked?'text-green-400':'text-slate-600'}`;
+    });
+  });
+
+  ct.querySelectorAll('[data-did]').forEach(btn => {
+    btn.addEventListener('click', async () => {
+      if (!confirm('Eliminare questo orario?')) return;
+      btn.disabled = true;
+      const fd = new FormData(); fd.append('id', btn.dataset.did);
+      const j = await fetch('/api/admin/delete_time_slot.php', { method:'POST', body:fd }).then(r=>r.json());
+      if (j.ok) renderSlots(j.slots);
+      else { alert(j.error||'Errore'); btn.disabled=false; }
+    });
+  });
+}
+
+async function saveSlot(id, time, capacity, active) {
+  const fd = new FormData();
+  fd.append('id', id); fd.append('slot_time', time); fd.append('capacity', capacity); fd.append('is_active', active);
+  try {
+    const j = await fetch('/api/admin/save_time_slot.php', { method:'POST', body:fd }).then(r=>r.json());
+    const msg = document.getElementById('slotMsg');
+    if (j.ok) showMsg(msg, 'Salvato.', 'success', 2000);
+    else showMsg(msg, j.error||'Errore', 'error');
+  } catch {}
+}
+
+async function addSlot() {
+  const btn = document.getElementById('addSlotBtn');
+  const tv = document.getElementById('newSlotTime').value;
+  const cv = parseInt(document.getElementById('newSlotCap').value||'30');
+  const msg = document.getElementById('slotMsg');
+  if (!tv) { showMsg(msg, 'Inserisci un orario valido.', 'error'); return; }
+  setLoading(btn, true);
+  const fd = new FormData(); fd.append('slot_time', tv.substring(0,5)); fd.append('capacity', cv||30); fd.append('is_active', 1);
+  try {
+    const j = await fetch('/api/admin/save_time_slot.php', { method:'POST', body:fd }).then(r=>r.json());
+    if (j.ok) { renderSlots(j.slots); document.getElementById('newSlotTime').value=''; document.getElementById('newSlotCap').value=''; showMsg(msg,'Orario aggiunto.','success'); }
+    else showMsg(msg, j.error||'Errore', 'error');
+  } catch { showMsg(msg,'Errore di rete.','error'); }
+  setLoading(btn, false);
+}
+
+// ===== CLOSURE DAYS =====
+const MN = ['Gennaio','Febbraio','Marzo','Aprile','Maggio','Giugno','Luglio','Agosto','Settembre','Ottobre','Novembre','Dicembre'];
+let cYear, cMonth, cDays = [];
+
+function initClosureCal() {
+  const now = new Date(); cYear = now.getFullYear(); cMonth = now.getMonth();
+  loadClosureDays();
+}
+
+async function loadClosureDays() {
+  const from = cYear+'-'+String(cMonth+1).padStart(2,'0')+'-01';
+  const last = new Date(cYear, cMonth+1, 0).getDate();
+  const to = cYear+'-'+String(cMonth+1).padStart(2,'0')+'-'+String(last).padStart(2,'0');
+  const today = new Date().toISOString().slice(0,10);
+  const future = new Date(Date.now()+90*86400000).toISOString().slice(0,10);
+  try {
+    const [j1,j2] = await Promise.all([
+      fetch(`/api/admin/list_closure_days.php?from=${from}&to=${to}`).then(r=>r.json()),
+      fetch(`/api/admin/list_closure_days.php?from=${today}&to=${future}`).then(r=>r.json())
+    ]);
+    cDays = (j1.closure_days||[]).map(x=>x.date);
+    renderClosureCal();
+    renderClosureList(j2.closure_days||[]);
+  } catch(e) { console.error(e); }
+}
+
+function renderClosureCal() {
+  document.getElementById('closureMonthLabel').textContent = MN[cMonth]+' '+cYear;
+  const cal = document.getElementById('closureCal');
+  const today = new Date(); today.setHours(0,0,0,0);
+  const first = new Date(cYear, cMonth, 1).getDay();
+  const days = new Date(cYear, cMonth+1, 0).getDate();
+  const dn = ['D','L','M','M','G','V','S'];
+  let html = dn.map(d=>`<div class="mcd-n">${d}</div>`).join('');
+  for(let i=0;i<first;i++) html+='<div class="mcd empty"></div>';
+  for(let d=1;d<=days;d++) {
+    const ds = cYear+'-'+String(cMonth+1).padStart(2,'0')+'-'+String(d).padStart(2,'0');
+    const td = new Date(cYear,cMonth,d);
+    const closed = cDays.includes(ds);
+    const past = td < today && !closed;
+    const isToday = td.getTime()===today.getTime();
+    let cls = 'mcd';
+    if (past) cls+=' past'; else if (closed) cls+=' closed'; else if (isToday) cls+=' today';
+    html += `<button class="${cls}" data-date="${ds}">${d}</button>`;
+  }
+  cal.innerHTML = html;
+
+  cal.querySelectorAll('[data-date]').forEach(btn => {
+    btn.addEventListener('click', async () => {
+      const fd = new FormData(); fd.append('date', btn.dataset.date);
+      try {
+        const j = await fetch('/api/admin/toggle_closure_day.php', { method:'POST', body:fd }).then(r=>r.json());
+        const msg = document.getElementById('closureMsg');
+        if (j.ok) {
+          showMsg(msg, j.action==='added'?`${j.date}: giorno di chiusura impostato.`:`${j.date}: chiusura rimossa.`, 'success');
+          loadClosureDays();
+        } else showMsg(msg, j.error||'Errore', 'error');
+      } catch { showMsg(document.getElementById('closureMsg'),'Errore di rete.','error'); }
+    });
+  });
+}
+
+function renderClosureList(rows) {
+  const ct = document.getElementById('closureList');
+  if (!rows.length) { ct.innerHTML='<p class="text-slate-600 text-sm">Nessuna chiusura programmata.</p>'; return; }
+  ct.innerHTML = rows.map(x=>`
+    <div class="flex items-center justify-between bg-white/[.03] border border-white/[.06] rounded-lg px-3 py-2.5">
+      <div>
+        <span class="text-sm font-bold text-primary">${x.date}</span>
+        ${x.reason?`<span class="text-xs text-slate-400 ml-2">${x.reason}</span>`:''}
+      </div>
+      <button class="abt abt-del" data-rd="${x.date}"><span class="ms text-[14px]">close</span></button>
+    </div>
+  `).join('');
+  ct.querySelectorAll('[data-rd]').forEach(btn => {
+    btn.addEventListener('click', async () => {
+      const fd = new FormData(); fd.append('date', btn.dataset.rd);
+      const j = await fetch('/api/admin/toggle_closure_day.php', { method:'POST', body:fd }).then(r=>r.json());
+      if (j.ok) { showMsg(document.getElementById('closureMsg'),'Chiusura rimossa.','success'); loadClosureDays(); }
+    });
+  });
+}
+
+document.getElementById('closurePrev').addEventListener('click', () => { cMonth--; if(cMonth<0){cMonth=11;cYear--;} loadClosureDays(); });
+document.getElementById('closureNext').addEventListener('click', () => { cMonth++; if(cMonth>11){cMonth=0;cYear++;} loadClosureDays(); });
+
+// INIT
+loadBookings();
+loadCancellations();
+initClosureCal();
 
 function startPolling() {
   if (pollTimer) clearInterval(pollTimer);
-  pollTimer = setInterval(() => {
-    loadBookings();
-    loadCancellations();
-  }, 4000);
+  pollTimer = setInterval(() => { loadBookings(); loadCancellations(); }, 5000);
 }
-
-loadBookings();
-loadCancellations();
 startPolling();
 </script>
 </body>

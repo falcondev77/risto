@@ -10,13 +10,11 @@ $date  = trim($_POST['booking_date'] ?? '');
 $time  = trim($_POST['booking_time'] ?? '');
 $people = (int)($_POST['people'] ?? 0);
 
-$allowed_times = ['19:00','19:30','20:00','20:30','21:00','21:30','22:00','22:30'];
-
 if ($first==='' || $last==='' || $phone==='' || $email==='' || $date==='' || $time==='' || $people<1) {
   json_out(['ok'=>false,'error'=>'Compila tutti i campi.'], 400);
 }
 
-if (!in_array($time, $allowed_times, true)) {
+if (!preg_match('/^\d{2}:\d{2}$/', $time)) {
   json_out(['ok'=>false,'error'=>'Orario non valido.'], 400);
 }
 
@@ -26,11 +24,21 @@ if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
 
 $mode = setting($pdo,'mode') ?? 'auto';
 
-$capacity = capacity_for_date($pdo, $date);
-$used = seats_used($pdo, $date);
+if (is_closure_day($pdo, $date)) {
+  json_out(['ok'=>false,'error'=>'Il locale è chiuso nella data selezionata.'], 409);
+}
 
-if ($capacity > 0 && ($used + $people) > $capacity) {
-  json_out(['ok'=>false,'error'=>"Posti esauriti per la data selezionata."], 409);
+$slotSt = $pdo->prepare("SELECT capacity FROM time_slots WHERE slot_time=? AND is_active=1");
+$slotSt->execute([$time]);
+$slotRow = $slotSt->fetch();
+
+if (!$slotRow) {
+  json_out(['ok'=>false,'error'=>'Orario non disponibile.'], 400);
+}
+
+$slotUsed = seats_used_for_slot($pdo, $date, $time);
+if ((int)$slotRow['capacity'] > 0 && ($slotUsed + $people) > (int)$slotRow['capacity']) {
+  json_out(['ok'=>false,'error'=>"Posti esauriti per l'orario selezionato."], 409);
 }
 
 $status = ($mode === 'manual') ? 'pending' : 'confirmed';

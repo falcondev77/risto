@@ -41,6 +41,25 @@ CREATE TABLE bookings (
 -- Migration: add booking_time if table already exists
 -- ALTER TABLE bookings ADD COLUMN booking_time TIME NOT NULL DEFAULT '19:00:00' AFTER booking_date;
 
+CREATE TABLE IF NOT EXISTS time_slots (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  slot_time VARCHAR(5) NOT NULL UNIQUE,
+  capacity INT NOT NULL DEFAULT 30,
+  is_active TINYINT(1) NOT NULL DEFAULT 1,
+  sort_order INT NOT NULL DEFAULT 0,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB;
+
+INSERT INTO time_slots (slot_time, capacity, sort_order) VALUES
+('19:00', 30, 10), ('19:30', 30, 20), ('20:00', 30, 30), ('20:30', 30, 40),
+('21:00', 30, 50), ('21:30', 30, 60), ('22:00', 30, 70), ('22:30', 30, 80);
+
+CREATE TABLE IF NOT EXISTS closure_days (
+  date DATE PRIMARY KEY,
+  reason VARCHAR(255) NULL,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB;
+
 CREATE TABLE events (
   id BIGINT AUTO_INCREMENT PRIMARY KEY,
   type VARCHAR(30) NOT NULL,
