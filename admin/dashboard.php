@@ -2,8 +2,13 @@
 require __DIR__.'/../config.php';
 require __DIR__.'/../functions.php';
 require_admin();
-$mode = setting($pdo,'mode') ?? 'auto';
-$defaultCap = (int)(setting($pdo,'default_capacity') ?? '0');
+$mode        = setting($pdo,'mode')             ?? 'auto';
+$defaultCap  = (int)(setting($pdo,'default_capacity') ?? '0');
+$adminBrand  = setting($pdo,'admin_brand')     ?? 'La Mozzata';
+$adminSub    = setting($pdo,'admin_subbrand')  ?? 'Pannello Admin';
+$adminPrimary= setting($pdo,'admin_primary')   ?? '#ec4913';
+$adminBg     = setting($pdo,'admin_bg')        ?? '#221510';
+$adminSurface= setting($pdo,'admin_surface')   ?? '#2e1e19';
 ?>
 <!DOCTYPE html>
 <html class="dark" lang="it">
@@ -20,14 +25,19 @@ tailwind.config = {
   darkMode: "class",
   theme: {
     extend: {
-      colors: { "primary": "#ec4913", "background-dark": "#221510", "surface-dark": "#2e1e19" },
+      colors: { "primary": "<?= h($adminPrimary) ?>", "background-dark": "<?= h($adminBg) ?>", "surface-dark": "<?= h($adminSurface) ?>" },
       fontFamily: { "display": ["Manrope","sans-serif"], "serif": ["Playfair Display","serif"] }
     }
   }
 }
 </script>
 <style>
-body { font-family: 'Manrope', sans-serif; }
+:root {
+  --primary: <?= h($adminPrimary) ?>;
+  --admin-bg: <?= h($adminBg) ?>;
+  --admin-surface: <?= h($adminSurface) ?>;
+}
+body { font-family: 'Manrope', sans-serif; background: var(--admin-bg) !important; }
 .ms { font-family: 'Material Symbols Outlined'; font-style: normal; font-weight: normal; font-size: 20px; line-height: 1; white-space: nowrap; display: inline-block; }
 
 /* TABLE */
@@ -45,8 +55,8 @@ body { font-family: 'Manrope', sans-serif; }
 .bdg-rejected { background:rgba(239,68,68,.12); color:#f87171; border:1px solid rgba(239,68,68,.25); }
 
 /* BUTTONS */
-.btn-p { background:#ec4913; color:#fff; border:none; border-radius:8px; padding:8px 16px; font-family:inherit; font-size:13px; font-weight:700; cursor:pointer; transition:background .15s; display:inline-flex; align-items:center; gap:6px; }
-.btn-p:hover:not(:disabled) { background:#d43f0e; }
+.btn-p { background:var(--primary); color:#fff; border:none; border-radius:8px; padding:8px 16px; font-family:inherit; font-size:13px; font-weight:700; cursor:pointer; transition:background .15s; display:inline-flex; align-items:center; gap:6px; }
+.btn-p:hover:not(:disabled) { filter:brightness(.88); }
 .btn-p:disabled { opacity:.5; cursor:not-allowed; }
 .btn-g { background:rgba(255,255,255,.06); color:#94a3b8; border:1px solid rgba(255,255,255,.1); border-radius:8px; padding:7px 13px; font-family:inherit; font-size:13px; font-weight:500; cursor:pointer; transition:all .12s; display:inline-flex; align-items:center; gap:6px; }
 .btn-g:hover:not(:disabled) { background:rgba(255,255,255,.1); color:#e2e8f0; }
@@ -66,23 +76,23 @@ body { font-family: 'Manrope', sans-serif; }
 
 /* INPUTS */
 .fi { background:#f5f0ee; border:1px solid rgba(0,0,0,.12); border-radius:8px; padding:8px 12px; font-family:inherit; font-size:13.5px; color:#1a0f0a; outline:none; transition:border-color .15s, box-shadow .15s; }
-.fi:focus { border-color:#ec4913; box-shadow:0 0 0 3px rgba(236,73,19,.2); }
+.fi:focus { border-color:var(--primary); box-shadow:0 0 0 3px color-mix(in srgb, var(--primary) 20%, transparent); }
 .fi::placeholder { color:#9a7060; }
 
 /* DATE FILTER SELECT */
 .date-filter { background:rgba(255,255,255,.06); border:1px solid rgba(255,255,255,.1); border-radius:8px; padding:6px 32px 6px 10px; font-family:inherit; font-size:12.5px; color:#e2e8f0; outline:none; cursor:pointer; appearance:none; -webkit-appearance:none; background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%2394a3b8' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E"); background-repeat:no-repeat; background-position:right 10px center; min-width:160px; transition:border-color .12s; }
-.date-filter:focus { border-color:#ec4913; }
+.date-filter:focus { border-color:var(--primary); }
 .date-filter option { background:#2e1e19; color:#e2e8f0; }
 
 /* NOTIFICATION BADGE */
 .notif-wrap { position:relative; }
-.notif-dot { position:absolute; top:-3px; right:-4px; min-width:16px; height:16px; border-radius:99px; font-size:9.5px; font-weight:800; display:flex; align-items:center; justify-content:center; padding:0 3px; border:1.5px solid #221510; line-height:1; }
-.notif-dot.new-bookings { background:#ec4913; color:#fff; }
+.notif-dot { position:absolute; top:-3px; right:-4px; min-width:16px; height:16px; border-radius:99px; font-size:9.5px; font-weight:800; display:flex; align-items:center; justify-content:center; padding:0 3px; border:1.5px solid var(--admin-surface); line-height:1; }
+.notif-dot.new-bookings { background:var(--primary); color:#fff; }
 .notif-dot.new-cancels { background:#f87171; color:#fff; }
 .notif-dot.hidden { display:none; }
 
 /* CARD */
-.card { background:#2e1e19; border:1px solid rgba(255,255,255,.06); border-radius:14px; overflow:hidden; margin-bottom:16px; }
+.card { background:var(--admin-surface); border:1px solid rgba(255,255,255,.06); border-radius:14px; overflow:hidden; margin-bottom:16px; }
 .ch { padding:15px 20px; border-bottom:1px solid rgba(255,255,255,.06); display:flex; align-items:center; justify-content:space-between; gap:10px; flex-wrap:wrap; }
 .cht { font-size:13.5px; font-weight:700; color:#e2e8f0; display:flex; align-items:center; gap:8px; }
 .cb { padding:20px; }
@@ -96,10 +106,10 @@ body { font-family: 'Manrope', sans-serif; }
 /* NAV */
 .nv { display:flex; align-items:center; gap:10px; padding:9px 12px; border-radius:8px; font-size:13.5px; font-weight:500; color:#64748b; cursor:pointer; transition:all .12s; border:none; background:none; width:100%; text-align:left; text-decoration:none; }
 .nv:hover { background:rgba(255,255,255,.05); color:#94a3b8; }
-.nv.active { background:rgba(236,73,19,.15); color:#ec4913; }
+.nv.active { background:color-mix(in srgb, var(--primary) 15%, transparent); color:var(--primary); }
 
 /* STAT */
-.sc { background:#2e1e19; border:1px solid rgba(255,255,255,.06); border-radius:12px; padding:16px 18px; }
+.sc { background:var(--admin-surface); border:1px solid rgba(255,255,255,.06); border-radius:12px; padding:16px 18px; }
 .sl { font-size:11px; font-weight:700; color:#475569; text-transform:uppercase; letter-spacing:.6px; margin-bottom:6px; }
 .sv { font-size:22px; font-weight:700; color:#e2e8f0; letter-spacing:-.5px; }
 .ss { font-size:12px; color:#64748b; margin-top:3px; }
@@ -108,7 +118,7 @@ body { font-family: 'Manrope', sans-serif; }
 .tgl { position:relative; display:inline-flex; align-items:center; cursor:pointer; }
 .tgl input { opacity:0; width:0; height:0; position:absolute; }
 .tgl-tr { width:36px; height:20px; background:rgba(255,255,255,.1); border-radius:99px; transition:background .2s; border:1px solid rgba(255,255,255,.1); }
-.tgl input:checked + .tgl-tr { background:#ec4913; border-color:#ec4913; }
+.tgl input:checked + .tgl-tr { background:var(--primary); border-color:var(--primary); }
 .tgl-th { position:absolute; left:3px; top:50%; transform:translateY(-50%); width:14px; height:14px; background:#fff; border-radius:50%; transition:transform .2s; pointer-events:none; }
 .tgl input:checked ~ .tgl-th { transform:translate(16px,-50%); }
 
@@ -119,9 +129,9 @@ body { font-family: 'Manrope', sans-serif; }
 .mcd:hover:not(.empty):not(.past) { background:rgba(255,255,255,.07); }
 .mcd.past { color:#1e293b; cursor:default; }
 .mcd.empty { cursor:default; }
-.mcd.today { color:#ec4913; font-weight:700; }
-.mcd.closed { background:rgba(236,73,19,.18); color:#ec4913; font-weight:700; border:1px solid rgba(236,73,19,.3); }
-.mcd.closed:hover:not(.past) { background:rgba(236,73,19,.3); }
+.mcd.today { color:var(--primary); font-weight:700; }
+.mcd.closed { background:color-mix(in srgb, var(--primary) 18%, transparent); color:var(--primary); font-weight:700; border:1px solid color-mix(in srgb, var(--primary) 30%, transparent); }
+.mcd.closed:hover:not(.past) { background:color-mix(in srgb, var(--primary) 30%, transparent); }
 
 /* SLOT ROW */
 .sr { display:flex; align-items:center; gap:10px; padding:10px 0; border-bottom:1px solid rgba(255,255,255,.05); }
@@ -155,14 +165,14 @@ body { font-family: 'Manrope', sans-serif; }
 }
 </style>
 </head>
-<body class="bg-[#221510] text-slate-100 min-h-screen">
+<body class="text-slate-100 min-h-screen" style="background:var(--admin-bg)">
 <div class="overlay" id="overlay"></div>
 
 <!-- SIDEBAR -->
-<aside class="sidebar fixed top-0 left-0 h-screen w-64 bg-[#2e1e19] border-r border-white/[.06] flex flex-col z-40">
+<aside class="sidebar fixed top-0 left-0 h-screen w-64 border-r border-white/[.06] flex flex-col z-40" style="background:var(--admin-surface)">
   <div class="px-6 py-5 border-b border-white/[.06]">
-    <div class="font-serif text-xl text-primary tracking-wide">La Mozzata</div>
-    <div class="text-xs text-slate-500 mt-0.5">Pannello Admin</div>
+    <div class="font-serif text-xl tracking-wide" style="color:var(--primary)"><?= h($adminBrand) ?></div>
+    <div class="text-xs text-slate-500 mt-0.5"><?= h($adminSub) ?></div>
   </div>
   <nav class="flex-1 p-3 space-y-0.5">
     <button class="nv active" data-tab="bookings" onclick="switchTab('bookings',this)">
@@ -185,6 +195,7 @@ body { font-family: 'Manrope', sans-serif; }
   </nav>
   <div class="p-3 border-t border-white/[.06]">
     <a href="/" class="nv"><span class="ms text-[18px]">open_in_new</span> Vai al sito</a>
+    <a href="/superadmin/login.php" class="nv" style="font-size:12px;color:#334155"><span class="ms text-[16px]">code</span> Developer Panel</a>
     <a href="/admin/logout.php" class="nv"><span class="ms text-[18px]">logout</span> Esci</a>
   </div>
 </aside>
@@ -193,7 +204,7 @@ body { font-family: 'Manrope', sans-serif; }
 <div class="ml-sidebar ml-64 flex flex-col min-h-screen">
 
   <!-- TOPBAR -->
-  <header class="sticky top-0 z-20 bg-[#2e1e19]/80 backdrop-blur-md border-b border-white/[.06] h-14 px-5 flex items-center justify-between">
+  <header class="sticky top-0 z-20 backdrop-blur-md border-b border-white/[.06] h-14 px-5 flex items-center justify-between" style="background:color-mix(in srgb, var(--admin-surface) 80%, transparent)">
     <div class="flex items-center gap-3">
       <button class="md:hidden p-1.5 flex flex-col gap-1" id="hamburger">
         <span class="block w-5 h-0.5 bg-slate-400 rounded"></span>

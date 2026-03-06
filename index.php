@@ -1,10 +1,18 @@
-<?php require __DIR__.'/config.php'; require __DIR__.'/functions.php'; ?>
+<?php
+require __DIR__.'/config.php';
+require __DIR__.'/functions.php';
+$siteName     = setting($pdo, 'site_name')     ?? 'La Mozzata';
+$siteSubtitle = setting($pdo, 'site_subtitle')  ?? 'Sapori autentici italiani attorno all\'arte della mozzarella fresca.';
+$siteBgUrl    = setting($pdo, 'site_bg_url')    ?? 'https://images.pexels.com/photos/1640777/pexels-photo-1640777.jpeg?auto=compress&cs=tinysrgb&w=1600';
+$siteLocation = setting($pdo, 'site_location')  ?? 'Roma';
+$siteHours    = setting($pdo, 'site_hours')     ?? '19:00 - 23:00';
+?>
 <!DOCTYPE html>
 <html class="dark" lang="it">
 <head>
   <meta charset="utf-8"/>
   <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
-  <title>La Mozzata</title>
+  <title><?= h($siteName) ?></title>
   <link href="https://fonts.googleapis.com" rel="preconnect"/>
   <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
   <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@300;400;500;700&family=Playfair+Display:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet"/>
@@ -55,7 +63,7 @@
     <div class="absolute inset-0 z-0">
       <div class="absolute inset-0 bg-hero-pattern z-10"></div>
       <div class="w-full h-full bg-cover bg-center opacity-40 mix-blend-overlay"
-           style="background-image: url('https://images.pexels.com/photos/1640777/pexels-photo-1640777.jpeg?auto=compress&cs=tinysrgb&w=1600');"></div>
+           style="background-image: url('<?= h($siteBgUrl) ?>');"></div>
     </div>
 
     <div class="layout-container flex h-full grow flex-col relative z-20 justify-center items-center">
@@ -81,12 +89,12 @@
 
           <!-- Title -->
           <h1 class="text-white font-serif text-[48px] md:text-[64px] font-bold leading-tight px-4 text-center pb-2 tracking-wide drop-shadow-sm">
-            La Mozzata
+            <?= h($siteName) ?>
           </h1>
 
           <!-- Subtitle -->
           <p class="text-slate-300 text-lg md:text-xl text-center font-display font-light mb-12 max-w-md mx-auto leading-relaxed">
-            Sapori autentici italiani attorno all'arte della mozzarella fresca.
+            <?= h($siteSubtitle) ?>
           </p>
 
           <!-- Buttons -->
@@ -104,11 +112,11 @@
           <!-- Location / Hours -->
           <div class="mt-20 flex gap-8 items-center justify-center text-slate-400 text-sm font-medium tracking-widest uppercase">
             <a class="hover:text-primary transition-colors flex items-center gap-1 no-underline" href="#" style="text-decoration:none;">
-              <span class="material-symbols-outlined text-[18px]">location_on</span> Roma
+              <span class="material-symbols-outlined text-[18px]">location_on</span> <?= h($siteLocation) ?>
             </a>
             <span class="w-1 h-1 rounded-full bg-slate-600"></span>
             <a class="hover:text-primary transition-colors flex items-center gap-1 no-underline" href="#" style="text-decoration:none;">
-              <span class="material-symbols-outlined text-[18px]">schedule</span> 19:00 - 23:00
+              <span class="material-symbols-outlined text-[18px]">schedule</span> <?= h($siteHours) ?>
             </a>
           </div>
 
